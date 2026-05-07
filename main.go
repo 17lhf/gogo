@@ -1,31 +1,58 @@
-// Go学习后台系统入口
-// 对比Java: public static void main(String[] args) in a class
-// Go的main()必须在package main中，且函数名就是main
 package main
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"net/http"
+	"time"
 
-	"gogo/api"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
+
+	"gogo/internal/cache"
+	"gogo/internal/config"
+	"gogo/internal/db"
 )
 
 func main() {
-	router := api.NewRouter()
+	cfg := config.Load()
 
-	addr := ":8080"
-	fmt.Println("================================================")
-	fmt.Println("  Go语言学习后台系统")
-	fmt.Println("  专为Java开发者设计")
-	fmt.Println("================================================")
-	fmt.Printf("  服务地址: http://localhost%s\n", addr)
-	fmt.Printf("  API文档:  http://localhost%s/\n", addr)
-	fmt.Printf("  健康检查: http://localhost%s/health\n", addr)
-	fmt.Println("  访问 GET / 查看所有学习端点")
-	fmt.Println("================================================")
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 
-	// log.Fatal = 打印错误后调用os.Exit(1)
-	// Java: SpringApplication.run(App.class, args) 类比
-	log.Fatal(http.ListenAndServe(addr, router))
+	// PostgreSQL
+	pool, err := db.New(ctx, cfg.Postgres.DSN())
+	if err != nil {
+		log.Fatalf("postgres init: %v", err)
+	}
+	defer pool.Close()
+
+	if err := db.Ping(ctx, pool); err != nil {
+		log.Fatalf("postgres unreachable: %v", err)
+	}
+	log.Println("postgres: connected")
+
+	// Redis
+	rdb := cache.New(cfg.Redis.Addr, cfg.Redis.Password)
+	defer rdb.Close()
+
+	if err := cache.Ping(context.Background(), rdb); err != nil {
+		log.Fatalf("redis unreachable: %v", err)
+	}
+	log.Println("redis: connected")
+
+	// Router
+	r := chi.NewRouter()
+	r.Use(middleware.Logger)
+	r.Use(middleware.Recoverer)
+
+	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"status":"ok"}`))
+	})
+
+	log.Printf("HTTP listening on :%s", cfg.Server.Port)
+	if err := http.ListenAndServe(":"+cfg.Server.Port, r); err != nil {
+		log.Fatalf("server: %v", err)
+	}
 }

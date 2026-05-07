@@ -1,0 +1,44 @@
+{
+  "name": "gogo Dev",
+  "dockerComposeFile": "../docker-compose.yml",
+  "service": "app",
+  "workspaceFolder": "/workspaces/gogo",
+
+  "features": {
+    "ghcr.io/devcontainers/features/go:1": {
+      "version": "1.26.1"
+    }
+  },
+
+  "forwardPorts": [8080, 5432, 6379],
+  "portsAttributes": {
+    "8080": { "label": "Go App" },
+    "5432": { "label": "PostgreSQL" },
+    "6379": { "label": "Redis" }
+  },
+
+  "postCreateCommand": "go mod download",
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "golang.go",
+        "ms-azuretools.vscode-docker",
+        "ms-azuretools.vscode-containers",
+        "humao.rest-client",
+        "ms-ossdata.vscode-pgsql",
+        "redis.redis-for-vscode",
+        "github.vscode-pull-request-github",
+        "anthropic.claude-code"
+      ],
+      "settings": {
+        "go.toolsManagement.autoUpdate": true,
+        "go.lintTool": "golangci-lint",
+        "editor.formatOnSave": true,
+        "[go]": {
+          "editor.defaultFormatter": "golang.go"
+        }
+      }
+    }
+  }
+}

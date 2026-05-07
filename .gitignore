@@ -1,0 +1,36 @@
+# 编译产物
+/gogo
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# 测试产物
+*.test
+*.out
+coverage.html
+coverage.out
+
+# Go workspace（Go 1.18+）
+go.work
+go.work.sum
+
+# 环境变量 / 本地配置
+.env
+.env.*
+!.env.example
+*.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# 操作系统
+.DS_Store
+Thumbs.db
+
+# AI产物
+.claude/tasks

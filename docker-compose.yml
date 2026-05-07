@@ -1,0 +1,56 @@
+services:
+  app:
+    image: mcr.microsoft.com/devcontainers/go:1.26.1
+    volumes:
+      - ..:/workspaces/gogo:cached
+    command: sleep infinity
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - gogo-net
+
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-gogo}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-gogo123}
+      POSTGRES_DB: ${POSTGRES_DB:-gogo_dev}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-gogo} -d ${POSTGRES_DB:-gogo_dev}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - gogo-net
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - gogo-net
+
+volumes:
+  postgres-data:
+  redis-data:
+
+networks:
+  gogo-net:
+    driver: bridge
