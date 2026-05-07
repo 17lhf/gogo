@@ -3,22 +3,29 @@
   "dockerComposeFile": "../docker-compose.yml",
   "service": "app",
   "workspaceFolder": "/workspaces/gogo",
-
   "features": {
     "ghcr.io/devcontainers/features/go:1": {
       "version": "1.26"
+    },
+    "ghcr.io/devcontainers/features/git-lfs:1": {}
+  },
+  "forwardPorts": [
+    8080,
+    5432,
+    6379
+  ],
+  "portsAttributes": {
+    "8080": {
+      "label": "Go App"
+    },
+    "5432": {
+      "label": "PostgreSQL"
+    },
+    "6379": {
+      "label": "Redis"
     }
   },
-
-  "forwardPorts": [8080, 5432, 6379],
-  "portsAttributes": {
-    "8080": { "label": "Go App" },
-    "5432": { "label": "PostgreSQL" },
-    "6379": { "label": "Redis" }
-  },
-
   "postCreateCommand": "go mod download",
-
   "customizations": {
     "vscode": {
       "extensions": [
