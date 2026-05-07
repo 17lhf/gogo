@@ -1,6 +1,6 @@
 services:
   app:
-    image: mcr.microsoft.com/devcontainers/go:1.26.1
+    image: mcr.microsoft.com/devcontainers/go:1.26
     volumes:
       - ..:/workspaces/gogo:cached
     command: sleep infinity
