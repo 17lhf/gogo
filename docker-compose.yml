@@ -2,14 +2,14 @@ services:
   app:
     image: mcr.microsoft.com/devcontainers/go:1.26
     volumes:
-      - ..:/workspaces/gogo:cached
+      - .:/workspaces/gogo:cached
       - /var/run/docker.sock:/var/run/docker.sock
     command: sleep infinity
     depends_on:
       postgres:
-        condition: service_healthy
+        condition: service_started
       redis:
-        condition: service_healthy
+        condition: service_started
     networks:
       - gogo-net
 
