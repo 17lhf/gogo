@@ -10,9 +10,7 @@
     "ghcr.io/devcontainers/features/git-lfs:1": {}
   },
   "forwardPorts": [
-    8080,
-    5432,
-    6379
+    8080
   ],
   "portsAttributes": {
     "8080": {
