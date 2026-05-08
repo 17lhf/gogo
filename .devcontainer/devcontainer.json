@@ -18,14 +18,20 @@
   ],
   "portsAttributes": {
     "8080": {
-      "label": "Go App"
+      "label": "Go App",
+      "onAutoForward": "notify"
     },
     "5432": {
-      "label": "PostgreSQL"
+      "label": "PostgreSQL",
+      "onAutoForward": "silent"
     },
     "6379": {
-      "label": "Redis"
+      "label": "Redis",
+      "onAutoForward": "silent"
     }
+  },
+  "otherPortsAttributes": {
+    "onAutoForward": "ignore"
   },
   "postCreateCommand": "go mod download",
   "customizations": {
