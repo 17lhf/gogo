@@ -41,7 +41,7 @@
         "ms-azuretools.vscode-containers",
         "humao.rest-client",
         "ms-ossdata.vscode-pgsql",
-        "redis.redis-for-vscode",
+        "cweijan.vscode-redis-client",
         "github.vscode-pull-request-github",
         "anthropic.claude-code"
       ],
