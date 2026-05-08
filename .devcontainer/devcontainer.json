@@ -9,17 +9,27 @@
     },
     "ghcr.io/devcontainers/features/git-lfs:1": {},
     "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {
-      "moby": false, 
+      "moby": false,
       "version": "latest"
     }
   },
   "forwardPorts": [
-    8080
+    8080,
+    5432,
+    6379
   ],
   "portsAttributes": {
     "8080": {
       "label": "Go App",
       "onAutoForward": "notify"
+    },
+    "6432": {
+      "label": "PostgreSQL",
+      "onAutoForward": "ignore"
+    },
+    "6379": {
+      "label": "Redis",
+      "onAutoForward": "ignore"
     }
   },
   "otherPortsAttributes": {
