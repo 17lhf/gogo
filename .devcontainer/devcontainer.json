@@ -20,14 +20,6 @@
     "8080": {
       "label": "Go App",
       "onAutoForward": "notify"
-    },
-    "5432": {
-      "label": "PostgreSQL",
-      "onAutoForward": "silent"
-    },
-    "6379": {
-      "label": "Redis",
-      "onAutoForward": "silent"
     }
   },
   "otherPortsAttributes": {
