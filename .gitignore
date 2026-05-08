@@ -34,3 +34,4 @@ Thumbs.db
 
 # AI产物
 .claude/tasks
+.claude/sessions
