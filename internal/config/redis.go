@@ -8,7 +8,7 @@ type RedisConfig struct {
 
 func loadRedis() RedisConfig {
 	return RedisConfig{
-		Addr:     getenv("REDIS_ADDR", "localhost:6379"),
+		Addr:     getenv("REDIS_ADDR", "redis:6379"),
 		Password: getenv("REDIS_PASSWORD", ""),
 	}
 }

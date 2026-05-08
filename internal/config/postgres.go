@@ -15,7 +15,7 @@ func loadPostgres() PostgresConfig {
 	return PostgresConfig{
 		User:     getenv("POSTGRES_USER", "gogo"),
 		Password: getenv("POSTGRES_PASSWORD", "gogo123"),
-		Host:     getenv("POSTGRES_HOST", "localhost"),
+		Host:     getenv("POSTGRES_HOST", "postgresql"),
 		Port:     getenv("POSTGRES_PORT", "5432"),
 		DB:       getenv("POSTGRES_DB", "gogo_dev"),
 	}
