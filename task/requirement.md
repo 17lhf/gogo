@@ -8,29 +8,13 @@
 
 ## 一、项目概述
 
-基于 Go + Gin + GORM + PostgreSQL + Redis 构建的后端 API 服务，为线下**门店/业务终端**提供统一管理平台。
+后端 API 服务，为线下**门店/业务终端**提供统一管理平台。
 
 系统包含五个核心模块：用户管理、角色管理、菜单管理、终端管理、日志管理。
 
 ---
 
-## 二、技术选型（已确认）
-
-| 分类 | 选型 |
-|------|------|
-| Web 框架 | `gin-gonic/gin` |
-| ORM | `gorm.io/gorm` + `gorm.io/driver/postgres` |
-| 缓存 | `redis/go-redis/v9` |
-| Session | `gin-contrib/sessions/redis`，Cookie 存 session_id，数据存 Redis |
-| 权限 | `casbin/casbin/v2` + `casbin/gorm-adapter/v3`，策略存 PostgreSQL |
-| API 文档 | `swaggo/swag` + `swaggo/gin-swagger` |
-| 参数校验 | `go-playground/validator/v10`（Gin 内置） |
-| 结构化日志 | `uber-go/zap` |
-| 开发规范 | Google Go Style Guide |
-
----
-
-## 三、已确认决策
+## 二、已确认决策
 
 | # | 问题 | 决策 |
 |---|------|------|
@@ -48,10 +32,25 @@
 | Q12 | DB 初始化 | 新项目直接建表，使用 GORM `AutoMigrate` |
 | Q13 | 响应格式 | 标准 JSON 封装，见下方规范 |
 | Q14 | 日志保留 | **保留 180 天**，定期清理过期数据 |
+| Q15 | 心跳超时判定 | Redis TTL + keyspace notification 过期回调，阈值 **60 秒** |
+| Q16 | 终端禁用策略 | 禁用即断连：清理 Redis key，下次心跳返回特定错误码 |
+| Q17 | 终端创建方式 | **管理员预录入**，手动填写 SN，系统生成 UUID device_token |
+| Q18 | device_token | UUID 格式，终端通过 `POST /api/v1/terminals/:sn/rotate-token` 主动轮换；管理员不可手动重置；泄露时运维从 Redis 移除 |
+| Q19 | 终端删除 | 清理 Redis heartbeat key；若终端继续心跳返回 404"终端不存在"；历史操作日志和终端日志中数据保留 |
+| Q20 | 审计日志范围 | **选择性记录**读操作，白名单：`GET /api/v1/auth/me`，其余 GET 不记录 |
+| Q21 | 日志清理调度 | 后续引入 gocron 等定时任务框架内部执行 |
+| Q22 | 门店删除 | 门店下有终端时**禁止删除** |
+| Q23 | store.code | 门店编号（如 `SH001`），纯内部标识，用户不可见 |
+| Q24 | 数据权限粒度 | **门店级隔离**，门店内所有终端对同一管理员全可见 |
+| Q25 | 超级管理员初始化 | **数据库迁移脚本**：INSERT `SUPER_ADMIN` 角色 + `admin` 用户 |
+| Q26 | 用户改密 | 提供独立改密接口 `PUT /api/v1/auth/password`，需提交旧密码 |
+| Q27 | 密码策略 | bcrypt cost=12，最小 8 位含大小写+数字，**365 天过期**，不禁止密码历史重复 |
+| Q28 | 首次登录 | 管理员重置密码后首次登录**强制修改密码** |
+| Q29 | 密码过期处理 | 密码过期后**允许登录**，但中间件拦截非改密接口（`PUT /api/v1/auth/password`），前端强制跳转改密页 |
 
 ---
 
-## 四、统一响应格式
+## 三、统一响应格式
 
 ```json
 // 成功（单条）
@@ -76,7 +75,7 @@
 
 ---
 
-## 五、模块功能需求
+## 四、模块功能需求
 
 ### 5.1 用户管理（User）
 
@@ -93,13 +92,27 @@
 | 登录 | POST | `/api/v1/auth/login` | 公开 |
 | 登出 | POST | `/api/v1/auth/logout` | 已登录 |
 | 当前用户信息 + 菜单 | GET | `/api/v1/auth/me` | 已登录 |
+| 修改密码 | PUT | `/api/v1/auth/password` | 已登录 |
 
 **业务规则**
 
-- 密码 bcrypt 存储（cost=12），最小 8 位，必须含大小写字母 + 数字
+密码策略：
+- bcrypt 存储（cost=12），最小 8 位，必须含大小写字母 + 数字
+- 密码有效期 **365 天**（从 `password_updated_at` 起算）
+- 管理员重置密码后，`must_change_password` 置为 `true`，用户首次登录**强制修改密码**
+- 密码过期后**允许登录**，但中间件拦截非改密接口（仅放行 `PUT /api/v1/auth/password`），前端强制跳转改密页
+- 不禁止密码历史重复使用
+
+登录与锁定：
 - 登录失败连续 5 次，账户锁定 30 分钟（Redis 计数器 `login_fail:{username}`）
 - Session 有效期 8 小时，存于 Redis
-- `SUPER_ADMIN` 角色在认证中间件中直接放行，不进入 Casbin
+
+管理员重置密码：
+- 管理员通过 `PUT /api/v1/users/:id/password` 重置任意用户密码，重置后 `must_change_password = true`
+- 用户通过 `PUT /api/v1/auth/password` 自行修改密码（需提交旧密码验证），修改后 `password_updated_at` 更新，`must_change_password = false`
+
+超级管理员：
+- `SUPER_ADMIN` 角色在认证中间件中直接放行，不进入 Casbin 校验
 
 ---
 
@@ -149,6 +162,11 @@
 | 更新门店 | PUT | `/api/v1/stores/:id` | `sys:store:edit` |
 | 删除门店 | DELETE | `/api/v1/stores/:id` | `sys:store:delete` |
 
+**业务规则**：
+
+- `code` 为门店编号（如 `SH001`），纯内部标识，用户不可见
+- 删除门店时，若该门店下存在终端（`terminals.store_id` 引用该门店），**禁止删除**
+
 #### 终端（Terminal）
 
 | 接口 | 方法 | 路径 | 权限码 |
@@ -159,20 +177,58 @@
 | 更新终端 | PUT | `/api/v1/terminals/:id` | `sys:terminal:edit` |
 | 删除终端 | DELETE | `/api/v1/terminals/:id` | `sys:terminal:delete` |
 | 心跳上报 | POST | `/api/v1/terminals/:sn/heartbeat` | 设备 Token（Header: `X-Device-Token`） |
+| Token 轮换 | POST | `/api/v1/terminals/:sn/rotate-token` | 设备 Token（Header: `X-Device-Token`） |
 
 **终端状态**：`online` / `offline` / `disabled`
+
+**状态流转**：
+
+```
+offline ──心跳恢复──→ online
+online  ──60s超时──→ offline  (Redis key 过期回调)
+online  ──管理员禁用─→ disabled (同时清理 Redis key，下次心跳返回错误码)
+offline ──管理员禁用─→ disabled (同上)
+disabled──管理员启用─→ offline  (等下次心跳自动切 online)
+```
+
+**心跳机制**：
+
+- 心跳上报时在 Redis 中 SET key `heartbeat:{sn}`，TTL = 60 秒
+- 通过 Redis keyspace notification 监听过期事件，超时回调：更新 `terminals.status` → `offline`，写入 `terminal_logs`（event_type = `heartbeat_timeout`）
+- 心跳恢复（`offline` → `online`）时写入 `terminal_logs`（event_type = `online`）
+- 管理员禁用/启用终端时也写入对应 `terminal_logs` 记录
+- `disabled` 状态的终端心跳返回错误，终端应停止上报
+
+**终端创建与凭证**：
+
+- 管理员在后管页面预录入终端（填写 SN、名称、类型、归属门店），系统生成 UUID 格式 `device_token`
+- 管理员将 SN + device_token 下发配置到终端设备
+- 终端创建后初始状态为 `offline`，首次心跳成功后自动切 `online`
+
+**device_token 轮换**：
+
+- 终端通过 `POST /api/v1/terminals/:sn/rotate-token`（携带旧 token）换取新 token，旧 token 立即失效
+- 管理员**不可**手动重置 token
+- token 泄露时由运维从 Redis 移除对应 key
+
+**终端删除**：
+
+- 删除终端时清理 Redis heartbeat key
+- 若该终端继续心跳，返回 404 "终端不存在"
+- 操作日志和终端日志中历史引用该终端的数据保留
 
 **数据隔离规则**：
 
 - 普通用户查询终端列表时，只返回其归属门店下的终端
 - `SUPER_ADMIN` 可查看全量数据
-- 中间件从 Session 中取用户 ID，查 `user_stores` 表得到可见门店列表，注入 Gin Context
+- 数据权限为**门店级**，门店内所有终端对同一管理员全可见
+- 中间件从 Session 中取用户 ID，查 `user_stores` 表得到可见门店列表，注入请求上下文
 
 ---
 
 ### 5.5 日志管理（Log）
 
-**① 操作审计日志** — Gin middleware 自动记录所有写操作（POST / PUT / DELETE）
+**① 操作审计日志** — 中间件自动记录所有写操作（POST / PUT / DELETE），以及白名单内的读操作
 
 | 接口 | 方法 | 路径 | 权限码 |
 |------|------|------|--------|
@@ -180,9 +236,14 @@
 
 查询过滤：`user_id`、`action`、`status`、时间范围（`start_time` / `end_time`）
 
-**② 终端设备日志** — 终端心跳超时、上下线事件
+审计白名单（读操作记录）：
+- `GET /api/v1/auth/me` — 当前用户信息查询
 
-事件类型：`online` / `offline` / `heartbeat_timeout`
+其余 GET 接口不记录审计日志。
+
+**② 终端设备日志** — 终端心跳超时、上下线、管理员禁用/启用事件
+
+事件类型：`online` / `offline` / `heartbeat_timeout` / `disabled` / `enabled`
 
 | 接口 | 方法 | 路径 | 权限码 |
 |------|------|------|--------|
@@ -190,11 +251,11 @@
 
 查询过滤：`sn`、`event_type`、时间范围
 
-**日志保留策略**：保留 180 天，通过定时任务（Go `time.Ticker` 或外部 cron）定期删除 `created_at < NOW() - INTERVAL '180 days'` 的记录。
+**日志保留策略**：保留 180 天，通过 gocron 等定时任务框架执行清理，定期删除 `created_at < NOW() - INTERVAL '180 days'` 的记录。
 
 ---
 
-## 六、数据库设计
+## 五、数据库设计
 
 > 全部物理删除，无 `deleted_at` 字段。主键均为 `BIGSERIAL`。
 
@@ -202,16 +263,18 @@
 
 ```sql
 CREATE TABLE users (
-    id            BIGSERIAL    PRIMARY KEY,
-    username      VARCHAR(64)  NOT NULL UNIQUE,
-    email         VARCHAR(128) NOT NULL UNIQUE,
-    password      VARCHAR(256) NOT NULL,           -- bcrypt hash
-    real_name     VARCHAR(64),
-    phone         VARCHAR(20),
-    status        SMALLINT     NOT NULL DEFAULT 1, -- 1=active 2=disabled 3=locked
-    last_login_at TIMESTAMPTZ,
-    created_at    TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
-    updated_at    TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+    id                    BIGSERIAL    PRIMARY KEY,
+    username              VARCHAR(64)  NOT NULL UNIQUE,
+    email                 VARCHAR(128) NOT NULL UNIQUE,
+    password              VARCHAR(256) NOT NULL,           -- bcrypt hash
+    real_name             VARCHAR(64),
+    phone                 VARCHAR(20),
+    status                SMALLINT     NOT NULL DEFAULT 1, -- 1=active 2=disabled 3=locked
+    must_change_password  BOOLEAN      NOT NULL DEFAULT FALSE, -- 首次登录/重置后强制改密
+    password_updated_at   TIMESTAMPTZ  NOT NULL DEFAULT NOW(),  -- 密码修改时间（用于365天过期判定）
+    last_login_at         TIMESTAMPTZ,
+    created_at            TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    updated_at            TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE roles (
@@ -318,7 +381,7 @@ CREATE TABLE terminal_logs (
     id          BIGSERIAL   PRIMARY KEY,
     terminal_id BIGINT,
     sn          VARCHAR(64) NOT NULL,
-    event_type  VARCHAR(32) NOT NULL,              -- online/offline/heartbeat_timeout
+    event_type  VARCHAR(32) NOT NULL,              -- online/offline/heartbeat_timeout/disabled/enabled
     detail      JSONB,
     created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -327,63 +390,24 @@ CREATE INDEX idx_terminal_logs_created_at ON terminal_logs(created_at);
 
 > 日志表均建 `created_at` 索引，用于 180 天定期清理查询加速。
 
-### Casbin 策略表
+### 权限策略表
 
-由 `casbin/gorm-adapter` 自动创建，存储 `(role, resource, action)` 三元组规则。
-
----
-
-## 七、项目目录结构
-
-遵循 Google Go Style Guide：
-
-```
-gogo/
-├── cmd/
-│   └── server/
-│       └── main.go              # 程序入口，Wire 依赖注入
-├── internal/
-│   ├── config/                  # 配置加载
-│   ├── db/                      # GORM 初始化 + AutoMigrate
-│   ├── cache/                   # Redis 客户端
-│   ├── model/                   # GORM 模型（纯结构体）
-│   │   ├── user.go
-│   │   ├── role.go
-│   │   ├── menu.go
-│   │   ├── store.go
-│   │   ├── terminal.go
-│   │   └── log.go
-│   ├── repository/              # 数据访问层（接口 + GORM 实现）
-│   ├── service/                 # 业务逻辑层（依赖 repository 接口）
-│   ├── handler/                 # Gin Handler（依赖 service 接口）
-│   ├── middleware/
-│   │   ├── auth.go              # Session 认证，注入当前用户到 Context
-│   │   ├── casbin.go            # RBAC 权限校验（SUPER_ADMIN 跳过）
-│   │   ├── store_scope.go       # 数据隔离：查询时限制可见门店范围
-│   │   └── audit.go             # 写操作自动记录审计日志
-│   ├── router/
-│   │   └── router.go            # 路由注册
-│   └── pkg/
-│       ├── response/            # 统一响应封装
-│       ├── errcode/             # 错误码定义
-│       └── password/            # bcrypt 工具
-├── docs/                        # swaggo 生成的 Swagger 文件
-├── go.mod
-└── go.sum
-```
+由权限框架自动管理，存储 `(role, resource, action)` 三元组规则。
 
 ---
 
-## 八、权限校验流程
+## 七、权限校验流程
 
 ```
 请求进入
-  → auth.go 中间件：校验 Session，取出 user_id + roles，注入 Context
+  → auth 中间件：校验 Session，取出 user_id + roles，注入请求上下文
       ↓ 未登录 → 返回 401
-  → casbin.go 中间件：判断 roles 是否含 SUPER_ADMIN
+  → 密码过期检查中间件：若 password_updated_at > 365 天 或 must_change_password = true
+      ↓ 仅放行 PUT /api/v1/auth/password，其他接口返回 403（强制改密）
+  → 权限中间件：判断 roles 是否含 SUPER_ADMIN
       ↓ 含 SUPER_ADMIN → 直接放行
-      ↓ 普通角色 → Casbin Enforce(role, path, method) → 无权限返回 403
-  → store_scope.go 中间件（终端/门店接口）：从 user_stores 查可见门店，注入 Context
+      ↓ 普通角色 → RBAC Enforce(role, path, method) → 无权限返回 403
+  → 数据隔离中间件（终端/门店接口）：从 user_stores 查可见门店，注入请求上下文
   → Handler 执行业务逻辑
-  → audit.go 中间件（After）：写操作记录审计日志
+  → 审计中间件（After）：写操作 + 白名单读操作记录审计日志
 ```

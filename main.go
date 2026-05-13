@@ -3,24 +3,31 @@ package main
 import (
 	"context"
 	"log"
-	"net/http"
+	"log/slog"
+	"os"
 	"time"
 
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
+	"github.com/gin-gonic/gin"
 
 	"gogo/internal/cache"
+	"gogo/internal/casbin"
 	"gogo/internal/config"
 	"gogo/internal/db"
+	"gogo/internal/handler"
+	"gogo/internal/repository"
+	"gogo/internal/router"
+	"gogo/internal/service"
 )
 
 func main() {
+	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo})))
+
 	cfg := config.Load()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	// PostgreSQL
+	// PostgreSQL pool (pgx)
 	pool, err := db.New(ctx, cfg.Postgres.DSN())
 	if err != nil {
 		log.Fatalf("postgres init: %v", err)
@@ -30,7 +37,23 @@ func main() {
 	if err := db.Ping(ctx, pool); err != nil {
 		log.Fatalf("postgres unreachable: %v", err)
 	}
-	log.Println("postgres: connected")
+	slog.Info("postgres connected")
+
+	// GORM
+	gormDB, err := db.NewGORM(ctx, cfg.Postgres.DSN())
+	if err != nil {
+		log.Fatalf("gorm init: %v", err)
+	}
+
+	if err := db.AutoMigrate(gormDB); err != nil {
+		log.Fatalf("auto migrate: %v", err)
+	}
+	slog.Info("database migrated")
+
+	// Seed initial data
+	if err := db.Seed(gormDB); err != nil {
+		log.Fatalf("seed data: %v", err)
+	}
 
 	// Redis
 	rdb := cache.New(cfg.Redis.Addr, cfg.Redis.Password)
@@ -39,20 +62,75 @@ func main() {
 	if err := cache.Ping(context.Background(), rdb); err != nil {
 		log.Fatalf("redis unreachable: %v", err)
 	}
-	log.Println("redis: connected")
+	slog.Info("redis connected")
 
-	// Router
-	r := chi.NewRouter()
-	r.Use(middleware.Logger)
-	r.Use(middleware.Recoverer)
+	// Casbin
+	enforcer, err := casbin.NewEnforcer(gormDB)
+	if err != nil {
+		log.Fatalf("casbin init: %v", err)
+	}
+	slog.Info("casbin initialized")
 
-	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"status":"ok"}`))
+	// Repositories
+	userRepo := repository.NewUserRepository(gormDB)
+	roleRepo := repository.NewRoleRepository(gormDB)
+	menuRepo := repository.NewMenuRepository(gormDB)
+	storeRepo := repository.NewStoreRepository(gormDB)
+	terminalRepo := repository.NewTerminalRepository(gormDB)
+	logRepo := repository.NewLogRepository(gormDB)
+
+	// Cache services
+	sessionCache := cache.NewSessionCache(rdb, cfg.Auth.SessionTTL)
+	lockoutCache := cache.NewLockoutCache(rdb, cfg.Auth.LockoutThreshold, cfg.Auth.LockoutDuration)
+	heartbeatCache := cache.NewHeartbeatCache(rdb, 60*time.Second)
+
+	// Services
+	authSvc := service.NewAuthService(userRepo, roleRepo, sessionCache, lockoutCache, cfg.Auth)
+	userSvc := service.NewUserService(userRepo)
+	roleSvc := service.NewRoleService(roleRepo, menuRepo)
+	menuSvc := service.NewMenuService(menuRepo)
+	storeSvc := service.NewStoreService(storeRepo)
+	terminalSvc := service.NewTerminalService(terminalRepo, storeRepo, heartbeatCache, logRepo)
+
+	// Handlers
+	authHandler := handler.NewAuthHandler(authSvc)
+	userHandler := handler.NewUserHandler(userSvc)
+	roleHandler := handler.NewRoleHandler(roleSvc)
+	menuHandler := handler.NewMenuHandler(menuSvc)
+	storeHandler := handler.NewStoreHandler(storeSvc)
+	terminalHandler := handler.NewTerminalHandler(terminalSvc, heartbeatCache)
+	logHandler := handler.NewLogHandler(logRepo)
+
+	// Start heartbeat expiry listener
+	go cache.ListenForExpiry(context.Background(), rdb, func(sn string) {
+		slog.Info("heartbeat expired", "sn", sn)
+		terminalSvc.HandleStatusTimeout(context.Background(), sn)
 	})
 
-	log.Printf("HTTP listening on :%s", cfg.Server.Port)
-	if err := http.ListenAndServe(":"+cfg.Server.Port, r); err != nil {
+	// Gin router
+	gin.SetMode(gin.ReleaseMode)
+	r := gin.New()
+	r.Use(gin.Recovery())
+
+	router.Register(r, &router.Dependencies{
+		AuthHandler:     authHandler,
+		UserHandler:     userHandler,
+		RoleHandler:     roleHandler,
+		MenuHandler:     menuHandler,
+		StoreHandler:    storeHandler,
+		TerminalHandler: terminalHandler,
+		LogHandler:      logHandler,
+
+		SessionCache:   sessionCache,
+		HeartbeatCache: heartbeatCache,
+		UserRepo:       userRepo,
+		LogRepo:        logRepo,
+		Enforcer:       enforcer,
+		AuthConfig:     cfg.Auth,
+	})
+
+	slog.Info("HTTP server starting", "port", cfg.Server.Port)
+	if err := r.Run(":" + cfg.Server.Port); err != nil {
 		log.Fatalf("server: %v", err)
 	}
 }

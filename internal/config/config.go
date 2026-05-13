@@ -7,6 +7,7 @@ type Config struct {
 	Postgres PostgresConfig
 	Redis    RedisConfig
 	Server   ServerConfig
+	Auth     AuthConfig
 }
 
 // Load reads all environment variables and returns a populated Config.
@@ -15,6 +16,7 @@ func Load() Config {
 		Postgres: loadPostgres(),
 		Redis:    loadRedis(),
 		Server:   loadServer(),
+		Auth:     loadAuth(),
 	}
 }
 
