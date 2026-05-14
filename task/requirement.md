@@ -29,7 +29,7 @@
 | Q9 | 终端 SN | **手动填写**，系统不自动生成 |
 | Q10 | 心跳认证 | 设备专属 Token（注册时生成，存于 `terminals.device_token`） |
 | Q11 | Config Push | **不需要**，终端主动拉取即可 |
-| Q12 | DB 初始化 | 新项目直接建表，使用 GORM `AutoMigrate` |
+| Q12 | DB 初始化 | 表结构由人工管理，项目不执行 AutoMigrate |
 | Q13 | 响应格式 | 标准 JSON 封装，见下方规范 |
 | Q14 | 日志保留 | **保留 180 天**，定期清理过期数据 |
 | Q15 | 心跳超时判定 | Redis TTL + keyspace notification 过期回调，阈值 **60 秒** |

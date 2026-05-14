@@ -63,11 +63,6 @@ func main() {
 		log.Fatalf("gorm init: %v", err)
 	}
 
-	if err := db.AutoMigrate(gormDB); err != nil {
-		log.Fatalf("auto migrate: %v", err)
-	}
-	slog.Info("database migrated")
-
 	// Seed initial data
 	if err := db.Seed(gormDB); err != nil {
 		log.Fatalf("seed data: %v", err)

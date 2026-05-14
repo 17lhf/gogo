@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"gogo/internal/model"
-
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -25,15 +23,3 @@ func NewGORM(ctx context.Context, dsn string) (*gorm.DB, error) {
 	return db, nil
 }
 
-// AutoMigrate runs GORM auto-migration for all models.
-func AutoMigrate(db *gorm.DB) error {
-	return db.AutoMigrate(
-		&model.User{},
-		&model.Role{},
-		&model.Menu{},
-		&model.Store{},
-		&model.Terminal{},
-		&model.OperationLog{},
-		&model.TerminalLog{},
-	)
-}

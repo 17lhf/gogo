@@ -33,7 +33,7 @@ gogo/
 │   │   └── auth.go               # JWT 密钥、Session TTL、锁定策略
 │   ├── db/
 │   │   ├── postgres.go           # pgxpool 连接池
-│   │   ├── gorm.go               # GORM 初始化 + AutoMigrate
+│   │   ├── gorm.go               # GORM 初始化
 │   │   └── seed.go               # 初始数据播种
 │   ├── cache/
 │   │   ├── redis.go              # Redis 客户端
