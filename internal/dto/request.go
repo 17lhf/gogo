@@ -1,5 +1,7 @@
 package dto
 
+import "gogo/internal/model"
+
 // LoginReq is the request body for POST /api/v1/auth/login.
 type LoginReq struct {
 	Username string `json:"username" binding:"required"`
@@ -26,7 +28,7 @@ type UpdateUserReq struct {
 	Email    string `json:"email" binding:"omitempty,email,max=128"`
 	RealName string `json:"real_name" binding:"max=64"`
 	Phone    string `json:"phone" binding:"max=20"`
-	Status *int16 `json:"status" binding:"omitempty,oneof=1 2 3"`
+	Status *model.UserStatus `json:"status" binding:"omitempty,userstatus"`
 }
 
 // ResetPasswordReq is the request body for admin password reset.
@@ -49,7 +51,7 @@ type UserListReq struct {
 	Page     int    `form:"page" binding:"omitempty,min=1"`
 	PageSize int    `form:"page_size" binding:"omitempty,min=1,max=100"`
 	Username string `form:"username"`
-	Status   *int16 `form:"status"`
+	Status   *model.UserStatus `form:"status"`
 }
 
 // CreateRoleReq is the request body for creating a role.
@@ -77,7 +79,7 @@ type CreateMenuReq struct {
 	Path      string `json:"path" binding:"max=256"`
 	Component string `json:"component" binding:"max=256"`
 	Icon      string `json:"icon" binding:"max=64"`
-	Type      int16  `json:"type" binding:"required,oneof=1 2 3"`
+	Type      model.MenuType `json:"type" binding:"required,menutype"`
 	Perms     string `json:"perms" binding:"max=128"`
 	SortOrder int    `json:"sort_order"`
 }
@@ -127,7 +129,7 @@ type UpdateTerminalReq struct {
 	Name  string  `json:"name" binding:"omitempty,min=2,max=128"`
 	Type  string  `json:"type" binding:"max=64"`
 	StoreID *int64 `json:"store_id"`
-	Status *string `json:"status" binding:"omitempty,oneof=online offline disabled enabled"`
+	Status *model.TerminalStatus `json:"status" binding:"omitempty,terminalstatus"`
 }
 
 // TerminalListReq is the query parameters for listing terminals.
@@ -135,7 +137,7 @@ type TerminalListReq struct {
 	Page     int    `form:"page" binding:"omitempty,min=1"`
 	PageSize int    `form:"page_size" binding:"omitempty,min=1,max=100"`
 	SN       string `form:"sn"`
-	Status   string `form:"status"`
+	Status   model.TerminalStatus `form:"status"`
 	StoreID  *int64 `form:"store_id"`
 }
 
@@ -156,7 +158,7 @@ type OperationLogListReq struct {
 	PageSize  int    `form:"page_size" binding:"omitempty,min=1,max=100"`
 	UserID    *int64 `form:"user_id"`
 	Action    string `form:"action"`
-	Status    *int16 `form:"status"`
+	Status    *model.LogStatus `form:"status"`
 	StartTime string `form:"start_time"`
 	EndTime   string `form:"end_time"`
 }

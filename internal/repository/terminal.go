@@ -20,8 +20,8 @@ type TerminalRepository interface {
 	Update(ctx context.Context, terminal *model.Terminal) error
 	Delete(ctx context.Context, id int64) error
 	UpdateHeartbeat(ctx context.Context, id int64, ip string) error
-	UpdateStatus(ctx context.Context, id int64, status string) error
-	UpdateStatusBySN(ctx context.Context, sn string, status string) error
+	UpdateStatus(ctx context.Context, id int64, status model.TerminalStatus) error
+	UpdateStatusBySN(ctx context.Context, sn string, status model.TerminalStatus) error
 	UpdateDeviceToken(ctx context.Context, id int64, token string) error
 }
 
@@ -104,17 +104,17 @@ func (r *terminalRepository) Delete(ctx context.Context, id int64) error {
 func (r *terminalRepository) UpdateHeartbeat(ctx context.Context, id int64, ip string) error {
 	now := time.Now()
 	return r.db.WithContext(ctx).Model(&model.Terminal{}).Where("id = ?", id).Updates(map[string]interface{}{
-		"status":              "online",
+		"status":              model.TerminalStatusOnline,
 		"ip_address":          ip,
 		"last_heartbeat_at":   now,
 	}).Error
 }
 
-func (r *terminalRepository) UpdateStatus(ctx context.Context, id int64, status string) error {
+func (r *terminalRepository) UpdateStatus(ctx context.Context, id int64, status model.TerminalStatus) error {
 	return r.db.WithContext(ctx).Model(&model.Terminal{}).Where("id = ?", id).Update("status", status).Error
 }
 
-func (r *terminalRepository) UpdateStatusBySN(ctx context.Context, sn string, status string) error {
+func (r *terminalRepository) UpdateStatusBySN(ctx context.Context, sn string, status model.TerminalStatus) error {
 	return r.db.WithContext(ctx).Model(&model.Terminal{}).Where("sn = ?", sn).Update("status", status).Error
 }
 

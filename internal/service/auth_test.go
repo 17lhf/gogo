@@ -77,7 +77,7 @@ func (s *userRepoStub) UpdatePassword(ctx context.Context, id int64, hash string
 	return nil
 }
 func (s *userRepoStub) UpdateLastLogin(ctx context.Context, id int64) error { return nil }
-func (s *userRepoStub) UpdateStatus(ctx context.Context, id int64, status int16) error {
+func (s *userRepoStub) UpdateStatus(ctx context.Context, id int64, status model.UserStatus) error {
 	return nil
 }
 

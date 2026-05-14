@@ -14,6 +14,7 @@ import (
 	"gogo/internal/config"
 	"gogo/internal/db"
 	"gogo/internal/handler"
+	"gogo/internal/model"
 	"gogo/internal/repository"
 	"gogo/internal/router"
 	"gogo/internal/service"
@@ -119,6 +120,9 @@ func main() {
 		slog.Info("heartbeat expired", "sn", sn)
 		terminalSvc.HandleStatusTimeout(context.Background(), sn)
 	})
+
+	// Register custom validators
+	model.RegisterValidators()
 
 	// Gin router
 	gin.SetMode(gin.ReleaseMode)

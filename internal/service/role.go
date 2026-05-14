@@ -34,7 +34,7 @@ func (s *RoleService) Create(ctx context.Context, req dto.CreateRoleReq) (*model
 		Name:        req.Name,
 		Code:        req.Code,
 		Description: req.Description,
-		Status:      1,
+		Status:      int16(model.UserStatusEnabled),
 	}
 	if err := s.roleRepo.Create(ctx, role); err != nil {
 		return nil, fmt.Errorf("create role: %w", err)

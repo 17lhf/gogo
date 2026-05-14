@@ -53,7 +53,7 @@ func (s *TerminalService) Create(ctx context.Context, req dto.CreateTerminalReq)
 		Name:        req.Name,
 		Type:        req.Type,
 		StoreID:     req.StoreID,
-		Status:      "offline",
+		Status:      model.TerminalStatusOffline,
 		DeviceToken: deviceToken,
 	}
 
@@ -158,9 +158,9 @@ func (s *TerminalService) Heartbeat(ctx context.Context, sn, ip, mac string) err
 	}
 
 	switch t.Status {
-	case "disabled":
+	case model.TerminalStatusDisabled:
 		return fmt.Errorf("%w: terminal disabled", ErrTerminalDisabled)
-	case "offline":
+	case model.TerminalStatusOffline:
 		// Transition offline → online
 		s.logRepo.CreateTerminal(ctx, &model.TerminalLog{
 			TerminalID: &t.ID,
@@ -216,8 +216,8 @@ func (s *TerminalService) HandleStatusTimeout(ctx context.Context, sn string) {
 		return
 	}
 
-	if t.Status == "online" {
-		s.terminalRepo.UpdateStatusBySN(ctx, sn, "offline")
+	if t.Status == model.TerminalStatusOnline {
+		s.terminalRepo.UpdateStatusBySN(ctx, sn, model.TerminalStatusOffline)
 		s.logRepo.CreateTerminal(ctx, &model.TerminalLog{
 			TerminalID: &t.ID,
 			SN:         sn,
@@ -226,19 +226,19 @@ func (s *TerminalService) HandleStatusTimeout(ctx context.Context, sn string) {
 	}
 }
 
-func (s *TerminalService) changeStatus(ctx context.Context, t *model.Terminal, newStatus string) error {
+func (s *TerminalService) changeStatus(ctx context.Context, t *model.Terminal, newStatus model.TerminalStatus) error {
 	switch newStatus {
-	case "disabled":
-		if t.Status != "disabled" {
+	case model.TerminalStatusDisabled:
+		if t.Status != model.TerminalStatusDisabled {
 			s.heartbeatCache.Delete(ctx, t.SN)
 			s.logRepo.CreateTerminal(ctx, &model.TerminalLog{
 				TerminalID: &t.ID, SN: t.SN, EventType: "disabled",
 			})
 		}
-		t.Status = "disabled"
-	case "enabled":
-		if t.Status == "disabled" {
-			t.Status = "offline"
+		t.Status = model.TerminalStatusDisabled
+	case model.TerminalStatusEnabled:
+		if t.Status == model.TerminalStatusDisabled {
+			t.Status = model.TerminalStatusOffline
 			s.logRepo.CreateTerminal(ctx, &model.TerminalLog{
 				TerminalID: &t.ID, SN: t.SN, EventType: "enabled",
 			})

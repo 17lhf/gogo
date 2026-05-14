@@ -55,7 +55,7 @@ func (s *UserService) Create(ctx context.Context, req dto.CreateUserReq) (*model
 		Password: hash,
 		RealName: req.RealName,
 		Phone:    req.Phone,
-		Status:   1,
+		Status:   model.UserStatusEnabled,
 	}
 
 	if err := s.userRepo.Create(ctx, user); err != nil {

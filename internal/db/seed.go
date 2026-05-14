@@ -36,7 +36,7 @@ func doSeed(db *gorm.DB) error {
 			Name:        "超级管理员",
 			Code:        "SUPER_ADMIN",
 			Description: "系统内置超级管理员，拥有所有权限",
-			Status:      1,
+			Status:      int16(model.UserStatusEnabled),
 		}
 		if err := tx.Create(superAdminRole).Error; err != nil {
 			return err
@@ -52,7 +52,7 @@ func doSeed(db *gorm.DB) error {
 			Email:    "admin@system.local",
 			Password: hash,
 			RealName: "系统管理员",
-			Status:   1,
+			Status:   model.UserStatusEnabled,
 		}
 		if err := tx.Create(adminUser).Error; err != nil {
 			return err
@@ -70,7 +70,7 @@ func doSeed(db *gorm.DB) error {
 			Path:      "/system",
 			Component: "Layout",
 			Icon:      "system",
-			Type:      1,
+			Type:      model.MenuTypeDirectory,
 			SortOrder: 1,
 			Visible:   true,
 			Status:    1,
@@ -80,12 +80,12 @@ func doSeed(db *gorm.DB) error {
 		}
 
 		childMenus := []*model.Menu{
-			{ParentID: rootMenu.ID, Name: "用户管理", Path: "/system/user", Component: "system/user/index", Icon: "user", Type: 2, SortOrder: 1, Visible: true, Status: 1},
-			{ParentID: rootMenu.ID, Name: "角色管理", Path: "/system/role", Component: "system/role/index", Icon: "role", Type: 2, SortOrder: 2, Visible: true, Status: 1},
-			{ParentID: rootMenu.ID, Name: "菜单管理", Path: "/system/menu", Component: "system/menu/index", Icon: "menu", Type: 2, SortOrder: 3, Visible: true, Status: 1},
-			{ParentID: rootMenu.ID, Name: "门店管理", Path: "/system/store", Component: "system/store/index", Icon: "store", Type: 2, SortOrder: 4, Visible: true, Status: 1},
-			{ParentID: rootMenu.ID, Name: "终端管理", Path: "/system/terminal", Component: "system/terminal/index", Icon: "terminal", Type: 2, SortOrder: 5, Visible: true, Status: 1},
-			{ParentID: rootMenu.ID, Name: "日志管理", Path: "/system/log", Component: "system/log/index", Icon: "log", Type: 2, SortOrder: 6, Visible: true, Status: 1},
+			{ParentID: rootMenu.ID, Name: "用户管理", Path: "/system/user", Component: "system/user/index", Icon: "user", Type: model.MenuTypePage, SortOrder:1, Visible: true, Status: 1},
+			{ParentID: rootMenu.ID, Name: "角色管理", Path: "/system/role", Component: "system/role/index", Icon: "role", Type: model.MenuTypePage, SortOrder:2, Visible: true, Status: 1},
+			{ParentID: rootMenu.ID, Name: "菜单管理", Path: "/system/menu", Component: "system/menu/index", Icon: "menu", Type: model.MenuTypePage, SortOrder:3, Visible: true, Status: 1},
+			{ParentID: rootMenu.ID, Name: "门店管理", Path: "/system/store", Component: "system/store/index", Icon: "store", Type: model.MenuTypePage, SortOrder:4, Visible: true, Status: 1},
+			{ParentID: rootMenu.ID, Name: "终端管理", Path: "/system/terminal", Component: "system/terminal/index", Icon: "terminal", Type: model.MenuTypePage, SortOrder:5, Visible: true, Status: 1},
+			{ParentID: rootMenu.ID, Name: "日志管理", Path: "/system/log", Component: "system/log/index", Icon: "log", Type: model.MenuTypePage, SortOrder:6, Visible: true, Status: 1},
 		}
 		buttonPerms := []struct {
 			parentIdx int
@@ -130,7 +130,7 @@ func doSeed(db *gorm.DB) error {
 			button := &model.Menu{
 				ParentID:  childMenus[bp.parentIdx].ID,
 				Name:      bp.name,
-				Type:      3,
+				Type:      model.MenuTypeButton,
 				Perms:     bp.perms,
 				SortOrder: bp.sortOrder,
 				Visible:   true,

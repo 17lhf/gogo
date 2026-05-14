@@ -16,7 +16,7 @@ type OperationLog struct {
 	Detail       json.RawMessage `gorm:"type:jsonb" json:"detail"`
 	IP           string          `gorm:"size:45" json:"ip"`
 	UserAgent    string          `gorm:"size:512" json:"user_agent"`
-	Status       int16           `gorm:"not null" json:"status"`
+	Status       LogStatus       `gorm:"not null" json:"status"`
 	DurationMs   int             `json:"duration_ms"`
 	CreatedAt    time.Time       `gorm:"not null;index" json:"created_at"`
 }

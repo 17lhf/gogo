@@ -10,7 +10,7 @@ type User struct {
 	Password           string     `gorm:"size:256;not null" json:"-"`
 	RealName           string     `gorm:"size:64" json:"real_name"`
 	Phone              string     `gorm:"size:20" json:"phone"`
-	Status             int16      `gorm:"default:1;not null" json:"status"`
+	Status             UserStatus `gorm:"default:1;not null" json:"status"`
 	MustChangePassword bool       `gorm:"default:false;not null" json:"must_change_password"`
 	PasswordUpdatedAt  time.Time  `gorm:"not null" json:"password_updated_at"`
 	LastLoginAt        *time.Time `json:"last_login_at"`

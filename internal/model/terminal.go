@@ -9,7 +9,7 @@ type Terminal struct {
 	Name             string     `gorm:"size:128;not null" json:"name"`
 	Type             string     `gorm:"size:64" json:"type"`
 	StoreID          int64      `gorm:"index" json:"store_id"`
-	Status           string     `gorm:"size:16;default:offline;not null" json:"status"`
+	Status           TerminalStatus `gorm:"size:16;default:offline;not null" json:"status"`
 	IPAddress        string     `gorm:"size:45" json:"ip_address"`
 	MACAddress       string     `gorm:"size:17" json:"mac_address"`
 	DeviceToken      string     `gorm:"size:256;not null" json:"-"`

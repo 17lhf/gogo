@@ -1,5 +1,7 @@
 package dto
 
+import "gogo/internal/model"
+
 // LoginResp is the response for successful login.
 type LoginResp struct {
 	AccessToken string `json:"access_token"`
@@ -14,7 +16,7 @@ type UserProfileResp struct {
 	Email              string `json:"email"`
 	RealName           string `json:"real_name"`
 	Phone              string `json:"phone"`
-	Status             int16  `json:"status"`
+	Status             model.UserStatus `json:"status"`
 	MustChangePassword bool   `json:"must_change_password"`
 	PasswordUpdatedAt  string `json:"password_updated_at"`
 	LastLoginAt        string `json:"last_login_at"`

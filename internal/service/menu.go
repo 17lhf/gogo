@@ -41,7 +41,7 @@ func (s *MenuService) Create(ctx context.Context, req dto.CreateMenuReq) (*model
 		Perms:     req.Perms,
 		SortOrder: req.SortOrder,
 		Visible:   true,
-		Status:    1,
+		Status:    int16(model.UserStatusEnabled),
 	}
 	if err := s.menuRepo.Create(ctx, menu); err != nil {
 		return nil, fmt.Errorf("create menu: %w", err)

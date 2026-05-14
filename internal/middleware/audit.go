@@ -44,9 +44,9 @@ func Audit(logRepo repository.LogRepository) gin.HandlerFunc {
 		}
 
 		durationMs := int(time.Since(start).Milliseconds())
-		status := int16(1)
+		status := model.LogStatusSuccess
 		if c.Writer.Status() >= 400 {
-			status = 2
+			status = model.LogStatusFailure
 		}
 
 		userID := GetUserID(c)

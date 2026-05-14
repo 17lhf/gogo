@@ -28,7 +28,7 @@ type UserRepository interface {
 
 	UpdatePassword(ctx context.Context, id int64, hash string, mustChange bool) error
 	UpdateLastLogin(ctx context.Context, id int64) error
-	UpdateStatus(ctx context.Context, id int64, status int16) error
+	UpdateStatus(ctx context.Context, id int64, status model.UserStatus) error
 }
 
 type userRepository struct {
@@ -80,7 +80,7 @@ func (r *userRepository) List(ctx context.Context, req dto.UserListReq) ([]model
 		query = query.Where("username ILIKE ?", "%"+req.Username+"%")
 	}
 	if req.Status != nil {
-		query = query.Where("status = ?", *req.Status)
+		query = query.Where("status = ?", int16(*req.Status))
 	}
 
 	if err := query.Count(&total).Error; err != nil {
@@ -174,6 +174,6 @@ func (r *userRepository) UpdateLastLogin(ctx context.Context, id int64) error {
 	return r.db.WithContext(ctx).Model(&model.User{}).Where("id = ?", id).Update("last_login_at", now).Error
 }
 
-func (r *userRepository) UpdateStatus(ctx context.Context, id int64, status int16) error {
+func (r *userRepository) UpdateStatus(ctx context.Context, id int64, status model.UserStatus) error {
 	return r.db.WithContext(ctx).Model(&model.User{}).Where("id = ?", id).Update("status", status).Error
 }

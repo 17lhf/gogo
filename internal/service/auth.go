@@ -58,12 +58,12 @@ func (s *AuthService) Login(ctx context.Context, req dto.LoginReq) (*dto.LoginRe
 		return nil, fmt.Errorf("%w: invalid credentials", ErrInvalidCredentials)
 	}
 
-	if user.Status != 1 {
+	if user.Status != model.UserStatusEnabled {
 		s.lockoutCache.RecordFailure(ctx, req.Username)
 		switch user.Status {
-		case 2:
+		case model.UserStatusDisabled:
 			return nil, fmt.Errorf("%w: account disabled", ErrAccountDisabled)
-		case 3:
+		case model.UserStatusLocked:
 			return nil, fmt.Errorf("%w: account locked", ErrAccountLocked)
 		default:
 			return nil, fmt.Errorf("%w: unknown status", ErrAccountDisabled)
@@ -73,7 +73,7 @@ func (s *AuthService) Login(ctx context.Context, req dto.LoginReq) (*dto.LoginRe
 	if err := pkg.CheckPassword(user.Password, req.Password); err != nil {
 		locked, _ := s.lockoutCache.RecordFailure(ctx, req.Username)
 		if locked {
-			s.userRepo.UpdateStatus(ctx, user.ID, 3)
+			s.userRepo.UpdateStatus(ctx, user.ID, model.UserStatusLocked)
 			return nil, fmt.Errorf("%w: account locked after %d failures", ErrAccountLocked, s.cfg.LockoutThreshold)
 		}
 		return nil, fmt.Errorf("%w: invalid credentials", ErrInvalidCredentials)

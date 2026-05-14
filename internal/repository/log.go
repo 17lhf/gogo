@@ -46,7 +46,7 @@ func (r *logRepository) ListOperations(ctx context.Context, req dto.OperationLog
 		query = query.Where("action = ?", req.Action)
 	}
 	if req.Status != nil {
-		query = query.Where("status = ?", *req.Status)
+		query = query.Where("status = ?", int16(*req.Status))
 	}
 	if req.StartTime != "" {
 		query = query.Where("created_at >= ?", req.StartTime)

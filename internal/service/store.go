@@ -25,7 +25,7 @@ func (s *StoreService) Create(ctx context.Context, req dto.CreateStoreReq) (*mod
 		Name:    req.Name,
 		Code:    req.Code,
 		Address: req.Address,
-		Status:  1,
+		Status:  int16(model.UserStatusEnabled),
 	}
 	if err := s.storeRepo.Create(ctx, store); err != nil {
 		return nil, fmt.Errorf("create store: %w", err)

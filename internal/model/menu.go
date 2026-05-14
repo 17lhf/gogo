@@ -10,7 +10,7 @@ type Menu struct {
 	Path      string    `gorm:"size:256" json:"path"`
 	Component string    `gorm:"size:256" json:"component"`
 	Icon      string    `gorm:"size:64" json:"icon"`
-	Type      int16     `gorm:"not null" json:"type"`
+	Type      MenuType  `gorm:"not null" json:"type"`
 	Perms     string    `gorm:"size:128" json:"perms"`
 	SortOrder int       `gorm:"default:0;not null" json:"sort_order"`
 	Visible   bool      `gorm:"default:true;not null" json:"visible"`

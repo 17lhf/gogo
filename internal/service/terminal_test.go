@@ -77,13 +77,13 @@ func (s *terminalRepoStub) Delete(ctx context.Context, id int64) error {
 func (s *terminalRepoStub) UpdateHeartbeat(ctx context.Context, id int64, ip string) error {
 	t := s.terminals[id]
 	if t != nil {
-		t.Status = "online"
+		t.Status = model.TerminalStatusOnline
 		t.IPAddress = ip
 	}
 	return nil
 }
 
-func (s *terminalRepoStub) UpdateStatus(ctx context.Context, id int64, status string) error {
+func (s *terminalRepoStub) UpdateStatus(ctx context.Context, id int64, status model.TerminalStatus) error {
 	t := s.terminals[id]
 	if t != nil {
 		t.Status = status
@@ -91,7 +91,7 @@ func (s *terminalRepoStub) UpdateStatus(ctx context.Context, id int64, status st
 	return nil
 }
 
-func (s *terminalRepoStub) UpdateStatusBySN(ctx context.Context, sn string, status string) error {
+func (s *terminalRepoStub) UpdateStatusBySN(ctx context.Context, sn string, status model.TerminalStatus) error {
 	t := s.bySN[sn]
 	if t != nil {
 		t.Status = status
@@ -165,7 +165,7 @@ func TestTerminalService_Create(t *testing.T) {
 	})
 	require.NoError(t, err)
 	assert.Equal(t, "TM001", tm.SN)
-	assert.Equal(t, "offline", tm.Status)
+	assert.Equal(t, model.TerminalStatusOffline, tm.Status)
 	assert.NotEmpty(t, tm.DeviceToken)
 }
 
@@ -183,7 +183,7 @@ func TestTerminalService_Create_StoreNotFound(t *testing.T) {
 
 func TestTerminalService_RotateToken(t *testing.T) {
 	repo := newTerminalRepoStub()
-	repo.bySN["TM001"] = &model.Terminal{ID: 1, SN: "TM001", DeviceToken: "old-token", Status: "online"}
+	repo.bySN["TM001"] = &model.Terminal{ID: 1, SN: "TM001", DeviceToken: "old-token", Status: model.TerminalStatusOnline}
 	repo.terminals[1] = repo.bySN["TM001"]
 
 	// RotateToken requires Redis heartbeatCache - skip for now (integration test needed)
