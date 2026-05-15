@@ -18,6 +18,7 @@
 | 测试 | testify |
 | Mock | uber-go/mock |
 | UUID | google/uuid |
+| 配置管理 | viper |
 | 国际化 | go-i18n/v2 + BurntSushi/toml |
 
 ## 项目结构
@@ -26,7 +27,7 @@
 gogo/
 ├── main.go                       # 入口，依赖注入
 ├── internal/
-│   ├── config/                   # 环境变量配置
+│   ├── config/                   # viper 配置管理 (env + 默认值)
 │   │   ├── config.go             # 配置聚合
 │   │   ├── postgres.go           # PostgreSQL 连接参数
 │   │   ├── redis.go              # Redis 连接参数
@@ -265,18 +266,18 @@ disabled──管理员启用─→ offline  (等下次心跳切 online)
 
 ### 启动
 ```bash
-# 复制环境变量
-cp .env.example .env
-
 # 启动 PostgreSQL 和 Redis
 docker-compose up -d
 
 # 安装依赖
 go mod tidy
 
-# 运行服务
+# 运行服务（开发环境自动加载 .env.example）
 go run main.go
 ```
+
+`APP_ENV` 默认为 `development`，启动时会自动加载项目根目录下的 `.env.example`。
+生产环境部署时设置 `APP_ENV=production`，应用将直接读取系统环境变量，不依赖 `.env.example` 文件。
 
 服务默认监听 `:8080`。
 

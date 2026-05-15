@@ -1,5 +1,7 @@
 package config
 
+import "github.com/spf13/viper"
+
 // RedisConfig holds connection parameters for Redis.
 type RedisConfig struct {
 	Addr     string
@@ -8,7 +10,7 @@ type RedisConfig struct {
 
 func loadRedis() RedisConfig {
 	return RedisConfig{
-		Addr:     getenv("REDIS_ADDR", "redis:6379"),
-		Password: getenv("REDIS_PASSWORD", ""),
+		Addr:     viper.GetString("REDIS_ADDR"),
+		Password: viper.GetString("REDIS_PASSWORD"),
 	}
 }

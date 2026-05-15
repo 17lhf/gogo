@@ -1,5 +1,7 @@
 package config
 
+import "github.com/spf13/viper"
+
 // ServerConfig holds HTTP server parameters.
 type ServerConfig struct {
 	Port string
@@ -7,6 +9,6 @@ type ServerConfig struct {
 
 func loadServer() ServerConfig {
 	return ServerConfig{
-		Port: getenv("APP_PORT", "8080"),
+		Port: viper.GetString("APP_PORT"),
 	}
 }

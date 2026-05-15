@@ -1,6 +1,10 @@
 package config
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/spf13/viper"
+)
 
 // PostgresConfig holds connection parameters for PostgreSQL.
 type PostgresConfig struct {
@@ -13,11 +17,11 @@ type PostgresConfig struct {
 
 func loadPostgres() PostgresConfig {
 	return PostgresConfig{
-		User:     getenv("POSTGRES_USER", "gogo"),
-		Password: getenv("POSTGRES_PASSWORD", "gogo123"),
-		Host:     getenv("POSTGRES_HOST", "postgresql"),
-		Port:     getenv("POSTGRES_PORT", "5432"),
-		DB:       getenv("POSTGRES_DB", "gogo_dev"),
+		User:     viper.GetString("POSTGRES_USER"),
+		Password: viper.GetString("POSTGRES_PASSWORD"),
+		Host:     viper.GetString("POSTGRES_HOST"),
+		Port:     viper.GetString("POSTGRES_PORT"),
+		DB:       viper.GetString("POSTGRES_DB"),
 	}
 }
 

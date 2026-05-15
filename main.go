@@ -8,6 +8,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
+	"github.com/spf13/viper"
 
 	"gogo/internal/cache"
 	"gogo/internal/casbin"
@@ -21,8 +23,15 @@ import (
 )
 
 func main() {
+	// In development, load .env.example; in production, read from system env.
+	if appEnv := os.Getenv("APP_ENV"); appEnv == "" || appEnv == "development" {
+		if err := godotenv.Load(".env.example"); err != nil {
+			log.Println("warning: .env.example not found, using system env vars only")
+		}
+	}
+
 	var level slog.Level
-	switch os.Getenv("LOG_LEVEL") {
+	switch viper.GetString("LOG_LEVEL") {
 	case "debug":
 		level = slog.LevelDebug
 	case "warn":
@@ -34,7 +43,7 @@ func main() {
 	}
 
 	var h slog.Handler
-	if os.Getenv("LOG_FORMAT") == "text" {
+	if viper.GetString("LOG_FORMAT") == "text" {
 		h = slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: level})
 	} else {
 		h = slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: level})
