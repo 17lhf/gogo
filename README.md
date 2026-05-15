@@ -18,6 +18,7 @@
 | 测试 | testify |
 | Mock | uber-go/mock |
 | UUID | google/uuid |
+| 国际化 | go-i18n/v2 + BurntSushi/toml |
 
 ## 项目结构
 
@@ -78,6 +79,12 @@ gogo/
 │   │   └── audit.go              # 操作审计日志 (写操作+白名单读)
 │   ├── router/
 │   │   └── router.go             # 路由注册 + 中间件编排
+│   ├── i18n/
+│   │   ├── i18n.go               # Bundle 初始化 + 语言检测中间件
+│   │   ├── messages.go           # 消息 ID 常量
+│   │   └── locales/
+│   │       ├── active.zh-CN.toml # 中文翻译 (默认回退)
+│   │       └── active.en-US.toml # 英文翻译
 │   ├── casbin/
 │   │   └── enforcer.go           # Casbin 初始化 + 策略管理
 │   ├── dto/
@@ -100,7 +107,7 @@ gogo/
 请求处理流程如下：
 
 ```
-Recovery
+Recovery → i18n (语言检测)
   → Auth (JWT 验证 + Redis Session 校验)
     → PasswordExpiry (密码过期检查，仅放行 /auth/password 和 /auth/me)
       → Permission (Casbin RBAC，SUPER_ADMIN 直接放行)
@@ -198,6 +205,23 @@ Recovery
 | 40101–40199 | 认证错误 |
 | 40301–40399 | 权限不足 |
 | 50001–50099 | 服务器内部错误 |
+
+## 国际化 (i18n)
+
+API 响应消息支持多语言，通过 `Accept-Language` 请求头切换。
+
+| 语言 | Accept-Language | 说明 |
+|------|-----------------|------|
+| 简体中文 | `zh-CN` (或不传) | 默认语言 |
+| English | `en-US` | |
+
+错误码 `code` 不受语言影响，始终为数字，可用于前端编程判断；`msg` 字段根据语言返回对应文本。
+
+### 新增语言
+
+1. 在 `internal/i18n/locales/` 下创建 `active.{lang}.toml`
+2. 按现有 TOML 格式翻译所有消息 ID
+3. 在 `internal/i18n/i18n.go` 的 `init()` 中 `LoadMessageFileFS` 加载新文件
 
 ## 核心设计
 

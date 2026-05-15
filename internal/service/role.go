@@ -2,11 +2,18 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"gogo/internal/dto"
 	"gogo/internal/model"
 	"gogo/internal/repository"
+)
+
+// Sentinel errors for role service.
+var (
+	ErrRoleNotFound   = errors.New("role not found")
+	ErrRoleCodeExists = errors.New("role code already exists")
 )
 
 // RoleService handles role management business logic.
@@ -27,7 +34,7 @@ func (s *RoleService) Create(ctx context.Context, req dto.CreateRoleReq) (*model
 		return nil, err
 	}
 	if existing != nil {
-		return nil, fmt.Errorf("角色编码已存在")
+		return nil, ErrRoleCodeExists
 	}
 
 	role := &model.Role{
@@ -49,7 +56,7 @@ func (s *RoleService) GetByID(ctx context.Context, id int64) (*model.Role, error
 		return nil, err
 	}
 	if role == nil {
-		return nil, fmt.Errorf("角色不存在")
+		return nil, ErrRoleNotFound
 	}
 	return role, nil
 }
@@ -66,7 +73,7 @@ func (s *RoleService) Update(ctx context.Context, id int64, req dto.UpdateRoleRe
 		return err
 	}
 	if role == nil {
-		return fmt.Errorf("角色不存在")
+		return ErrRoleNotFound
 	}
 
 	if req.Name != "" {
@@ -86,7 +93,7 @@ func (s *RoleService) Delete(ctx context.Context, id int64) error {
 		return err
 	}
 	if role == nil {
-		return fmt.Errorf("角色不存在")
+		return ErrRoleNotFound
 	}
 	return s.roleRepo.Delete(ctx, id)
 }
@@ -98,7 +105,7 @@ func (s *RoleService) GetMenus(ctx context.Context, id int64) ([]int64, error) {
 		return nil, err
 	}
 	if role == nil {
-		return nil, fmt.Errorf("角色不存在")
+		return nil, ErrRoleNotFound
 	}
 	return s.roleRepo.GetMenuIDs(ctx, id)
 }
@@ -110,7 +117,7 @@ func (s *RoleService) AssignMenus(ctx context.Context, id int64, menuIDs []int64
 		return err
 	}
 	if role == nil {
-		return fmt.Errorf("角色不存在")
+		return ErrRoleNotFound
 	}
 	return s.roleRepo.SetMenus(ctx, id, menuIDs)
 }

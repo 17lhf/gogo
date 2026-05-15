@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -45,7 +46,7 @@ func TestUserService_Create_DuplicateUsername(t *testing.T) {
 	}
 	_, err := svc.Create(context.Background(), req)
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "用户名已存在")
+	assert.True(t, errors.Is(err, ErrUsernameExists))
 }
 
 func TestUserService_Create_DuplicateEmail(t *testing.T) {
@@ -62,7 +63,7 @@ func TestUserService_Create_DuplicateEmail(t *testing.T) {
 	}
 	_, err := svc.Create(context.Background(), req)
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "邮箱已存在")
+	assert.True(t, errors.Is(err, ErrEmailExists))
 }
 
 func TestUserService_GetByID_NotFound(t *testing.T) {
@@ -71,7 +72,7 @@ func TestUserService_GetByID_NotFound(t *testing.T) {
 
 	_, err := svc.GetByID(context.Background(), 999)
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "不存在")
+	assert.True(t, errors.Is(err, ErrUserNotFound))
 }
 
 func TestUserService_Delete_NotFound(t *testing.T) {
@@ -80,7 +81,7 @@ func TestUserService_Delete_NotFound(t *testing.T) {
 
 	err := svc.Delete(context.Background(), 999)
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "不存在")
+	assert.True(t, errors.Is(err, ErrUserNotFound))
 }
 
 func TestUserService_ResetPassword(t *testing.T) {
@@ -122,5 +123,5 @@ func TestUserService_Update_NotFound(t *testing.T) {
 
 	err := svc.Update(context.Background(), 999, dto.UpdateUserReq{})
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "不存在")
+	assert.True(t, errors.Is(err, ErrUserNotFound))
 }

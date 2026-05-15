@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -108,7 +109,7 @@ func TestMenuService_DeleteWithChildren(t *testing.T) {
 
 	err := svc.Delete(context.Background(), root.ID)
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "存在子菜单")
+	assert.True(t, errors.Is(err, ErrMenuHasChildren))
 }
 
 func TestMenuService_DeleteLeaf(t *testing.T) {

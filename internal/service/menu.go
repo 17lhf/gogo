@@ -2,11 +2,19 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"gogo/internal/dto"
 	"gogo/internal/model"
 	"gogo/internal/repository"
+)
+
+// Sentinel errors for menu service.
+var (
+	ErrMenuNotFound       = errors.New("menu not found")
+	ErrParentMenuNotFound = errors.New("parent menu not found")
+	ErrMenuHasChildren    = errors.New("menu has children")
 )
 
 // MenuService handles menu management business logic.
@@ -27,7 +35,7 @@ func (s *MenuService) Create(ctx context.Context, req dto.CreateMenuReq) (*model
 			return nil, err
 		}
 		if parent == nil {
-			return nil, fmt.Errorf("父菜单不存在")
+			return nil, ErrParentMenuNotFound
 		}
 	}
 
@@ -56,7 +64,7 @@ func (s *MenuService) GetByID(ctx context.Context, id int64) (*model.Menu, error
 		return nil, err
 	}
 	if menu == nil {
-		return nil, fmt.Errorf("菜单不存在")
+		return nil, ErrMenuNotFound
 	}
 	return menu, nil
 }
@@ -106,7 +114,7 @@ func (s *MenuService) Update(ctx context.Context, id int64, req dto.UpdateMenuRe
 		return err
 	}
 	if menu == nil {
-		return fmt.Errorf("菜单不存在")
+		return ErrMenuNotFound
 	}
 
 	if req.Name != "" {
@@ -144,7 +152,7 @@ func (s *MenuService) Delete(ctx context.Context, id int64) error {
 		return err
 	}
 	if menu == nil {
-		return fmt.Errorf("菜单不存在")
+		return ErrMenuNotFound
 	}
 
 	hasChildren, err := s.menuRepo.HasChildren(ctx, id)
@@ -152,7 +160,7 @@ func (s *MenuService) Delete(ctx context.Context, id int64) error {
 		return err
 	}
 	if hasChildren {
-		return fmt.Errorf("该菜单下存在子菜单，无法删除")
+		return ErrMenuHasChildren
 	}
 
 	return s.menuRepo.Delete(ctx, id)

@@ -4,6 +4,7 @@ import (
 	"github.com/casbin/casbin/v2"
 	"github.com/gin-gonic/gin"
 
+	"gogo/internal/i18n"
 	"gogo/internal/pkg"
 )
 
@@ -33,6 +34,6 @@ func Permission(enforcer *casbin.Enforcer) gin.HandlerFunc {
 			}
 		}
 
-		pkg.Error(c, 403, pkg.CodeForbidden, "权限不足")
+		pkg.Error(c, 403, pkg.CodeForbidden, i18n.Localize(c, i18n.MsgForbidden))
 	}
 }

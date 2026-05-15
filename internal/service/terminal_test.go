@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
@@ -178,7 +179,7 @@ func TestTerminalService_Create_StoreNotFound(t *testing.T) {
 		StoreID: 999,
 	})
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "门店不存在")
+	assert.True(t, errors.Is(err, ErrStoreNotFound))
 }
 
 func TestTerminalService_RotateToken(t *testing.T) {

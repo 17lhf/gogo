@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"gogo/internal/dto"
+	"gogo/internal/i18n"
 	"gogo/internal/middleware"
 	"gogo/internal/pkg"
 	"gogo/internal/service"
@@ -26,7 +27,7 @@ func NewAuthHandler(authSvc *service.AuthService) *AuthHandler {
 func (h *AuthHandler) Login(c *gin.Context) {
 	var req dto.LoginReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		pkg.Error(c, http.StatusBadRequest, pkg.CodeValidationError, "参数错误："+err.Error())
+		pkg.Error(c, http.StatusBadRequest, pkg.CodeValidationError, i18n.Localize(c, i18n.MsgParamInvalid)+": "+err.Error())
 		return
 	}
 
@@ -44,7 +45,7 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 	userID := middleware.GetUserID(c)
 	jti := middleware.GetSessionID(c)
 	if err := h.authSvc.Logout(c.Request.Context(), userID, jti); err != nil {
-		pkg.Error(c, http.StatusInternalServerError, pkg.CodeInternalError, "登出失败")
+		pkg.Error(c, http.StatusInternalServerError, pkg.CodeInternalError, i18n.Localize(c, i18n.MsgAuthLogoutFailed))
 		return
 	}
 	pkg.Success(c, nil)
@@ -55,7 +56,7 @@ func (h *AuthHandler) Me(c *gin.Context) {
 	userID := middleware.GetUserID(c)
 	profile, err := h.authSvc.Me(c.Request.Context(), userID)
 	if err != nil {
-		pkg.Error(c, http.StatusInternalServerError, pkg.CodeInternalError, "获取用户信息失败")
+		pkg.Error(c, http.StatusInternalServerError, pkg.CodeInternalError, i18n.Localize(c, i18n.MsgAuthGetProfileFail))
 		return
 	}
 	pkg.Success(c, profile)
@@ -65,32 +66,47 @@ func (h *AuthHandler) Me(c *gin.Context) {
 func (h *AuthHandler) ChangePassword(c *gin.Context) {
 	var req dto.ChangePasswordReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		pkg.Error(c, http.StatusBadRequest, pkg.CodeValidationError, "参数错误："+err.Error())
+		pkg.Error(c, http.StatusBadRequest, pkg.CodeValidationError, i18n.Localize(c, i18n.MsgParamInvalid)+": "+err.Error())
 		return
 	}
 
 	userID := middleware.GetUserID(c)
 	if err := h.authSvc.ChangePassword(c.Request.Context(), userID, req); err != nil {
 		if errors.Is(err, service.ErrInvalidCredentials) {
-			pkg.Error(c, http.StatusBadRequest, pkg.CodeParamError, "原密码错误")
+			pkg.Error(c, http.StatusBadRequest, pkg.CodeParamError, i18n.Localize(c, i18n.MsgAuthWrongPassword))
 			return
 		}
-		pkg.Error(c, http.StatusBadRequest, pkg.CodeParamError, err.Error())
+		handleChangePasswordError(c, err)
 		return
 	}
 
 	pkg.Success(c, nil)
 }
 
+func handleChangePasswordError(c *gin.Context, err error) {
+	switch {
+	case errors.Is(err, pkg.ErrPasswordTooShort):
+		pkg.Error(c, http.StatusBadRequest, pkg.CodeParamError, i18n.Localize(c, i18n.MsgPasswordLength))
+	case errors.Is(err, pkg.ErrPasswordNoUpper):
+		pkg.Error(c, http.StatusBadRequest, pkg.CodeParamError, i18n.Localize(c, i18n.MsgPasswordUpper))
+	case errors.Is(err, pkg.ErrPasswordNoLower):
+		pkg.Error(c, http.StatusBadRequest, pkg.CodeParamError, i18n.Localize(c, i18n.MsgPasswordLower))
+	case errors.Is(err, pkg.ErrPasswordNoDigit):
+		pkg.Error(c, http.StatusBadRequest, pkg.CodeParamError, i18n.Localize(c, i18n.MsgPasswordDigit))
+	default:
+		pkg.Error(c, http.StatusBadRequest, pkg.CodeParamError, err.Error())
+	}
+}
+
 func handleAuthError(c *gin.Context, err error) {
 	switch {
 	case errors.Is(err, service.ErrAccountLocked):
-		pkg.Error(c, http.StatusForbidden, pkg.CodeAccountLocked, "账户已锁定，请30分钟后重试")
+		pkg.Error(c, http.StatusForbidden, pkg.CodeAccountLocked, i18n.Localize(c, i18n.MsgAuthAccountLocked))
 	case errors.Is(err, service.ErrAccountDisabled):
-		pkg.Error(c, http.StatusForbidden, pkg.CodeAccountLocked, "账户已被禁用")
+		pkg.Error(c, http.StatusForbidden, pkg.CodeAccountLocked, i18n.Localize(c, i18n.MsgAuthAccountDisabled))
 	case errors.Is(err, service.ErrInvalidCredentials):
-		pkg.Error(c, http.StatusUnauthorized, pkg.CodeUnauthorized, "用户名或密码错误")
+		pkg.Error(c, http.StatusUnauthorized, pkg.CodeUnauthorized, i18n.Localize(c, i18n.MsgAuthWrongCreds))
 	default:
-		pkg.Error(c, http.StatusInternalServerError, pkg.CodeInternalError, "登录失败")
+		pkg.Error(c, http.StatusInternalServerError, pkg.CodeInternalError, i18n.Localize(c, i18n.MsgAuthLoginFailed))
 	}
 }

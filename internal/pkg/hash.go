@@ -1,10 +1,19 @@
 package pkg
 
 import (
+	"errors"
 	"fmt"
 	"unicode"
 
 	"golang.org/x/crypto/bcrypt"
+)
+
+// Password validation sentinel errors.
+var (
+	ErrPasswordTooShort = errors.New("password too short")
+	ErrPasswordNoUpper  = errors.New("password missing uppercase")
+	ErrPasswordNoLower  = errors.New("password missing lowercase")
+	ErrPasswordNoDigit  = errors.New("password missing digit")
 )
 
 // HashPassword returns a bcrypt hash of the password.
@@ -25,7 +34,7 @@ func CheckPassword(hash, password string) error {
 // at least 8 characters, contains uppercase, lowercase, and digit.
 func ValidatePasswordStrength(password string) error {
 	if len(password) < 8 {
-		return fmt.Errorf("密码长度不能少于8位")
+		return ErrPasswordTooShort
 	}
 	var hasUpper, hasLower, hasDigit bool
 	for _, ch := range password {
@@ -39,13 +48,13 @@ func ValidatePasswordStrength(password string) error {
 		}
 	}
 	if !hasUpper {
-		return fmt.Errorf("密码必须包含大写字母")
+		return ErrPasswordNoUpper
 	}
 	if !hasLower {
-		return fmt.Errorf("密码必须包含小写字母")
+		return ErrPasswordNoLower
 	}
 	if !hasDigit {
-		return fmt.Errorf("密码必须包含数字")
+		return ErrPasswordNoDigit
 	}
 	return nil
 }

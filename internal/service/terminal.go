@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"gogo/internal/cache"
@@ -43,7 +44,7 @@ func (s *TerminalService) Create(ctx context.Context, req dto.CreateTerminalReq)
 		return nil, err
 	}
 	if store == nil {
-		return nil, fmt.Errorf("门店不存在")
+		return nil, ErrStoreNotFound
 	}
 
 	deviceToken := uuid.New().String()
@@ -71,7 +72,7 @@ func (s *TerminalService) GetByID(ctx context.Context, id int64) (*model.Termina
 		return nil, err
 	}
 	if t == nil {
-		return nil, fmt.Errorf("终端不存在")
+		return nil, ErrTerminalNotFound
 	}
 	return t, nil
 }
@@ -100,7 +101,7 @@ func (s *TerminalService) Update(ctx context.Context, id int64, req dto.UpdateTe
 		return err
 	}
 	if t == nil {
-		return fmt.Errorf("终端不存在")
+		return ErrTerminalNotFound
 	}
 
 	if req.Name != "" {
@@ -115,7 +116,7 @@ func (s *TerminalService) Update(ctx context.Context, id int64, req dto.UpdateTe
 			return err
 		}
 		if store == nil {
-			return fmt.Errorf("门店不存在")
+			return ErrStoreNotFound
 		}
 		t.StoreID = *req.StoreID
 	}
@@ -137,7 +138,7 @@ func (s *TerminalService) Delete(ctx context.Context, id int64) error {
 		return err
 	}
 	if t == nil {
-		return fmt.Errorf("终端不存在")
+		return ErrTerminalNotFound
 	}
 
 	// Clean up Redis heartbeat key
@@ -154,7 +155,7 @@ func (s *TerminalService) Heartbeat(ctx context.Context, sn, ip, mac string) err
 		return err
 	}
 	if t == nil {
-		return fmt.Errorf("终端不存在")
+		return ErrTerminalNotFound
 	}
 
 	switch t.Status {
@@ -193,7 +194,7 @@ func (s *TerminalService) RotateToken(ctx context.Context, sn string) (string, e
 		return "", err
 	}
 	if t == nil {
-		return "", fmt.Errorf("终端不存在")
+		return "", ErrTerminalNotFound
 	}
 
 	oldToken := t.DeviceToken
@@ -244,10 +245,14 @@ func (s *TerminalService) changeStatus(ctx context.Context, t *model.Terminal, n
 			})
 		}
 	default:
-		return fmt.Errorf("无效的状态变更")
+		return ErrInvalidStatusChange
 	}
 	return nil
 }
 
-// ErrTerminalDisabled is returned when a disabled terminal attempts to heartbeat.
-var ErrTerminalDisabled = fmt.Errorf("terminal disabled")
+// Sentinel errors for terminal service.
+var (
+	ErrTerminalNotFound    = errors.New("terminal not found")
+	ErrTerminalDisabled    = errors.New("terminal disabled")
+	ErrInvalidStatusChange = errors.New("invalid status change")
+)

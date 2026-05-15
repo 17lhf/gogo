@@ -2,11 +2,18 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"gogo/internal/dto"
 	"gogo/internal/model"
 	"gogo/internal/repository"
+)
+
+// Sentinel errors for store service.
+var (
+	ErrStoreNotFound     = errors.New("store not found")
+	ErrStoreHasTerminals = errors.New("store has terminals")
 )
 
 // StoreService handles store management business logic.
@@ -40,7 +47,7 @@ func (s *StoreService) GetByID(ctx context.Context, id int64) (*model.Store, err
 		return nil, err
 	}
 	if store == nil {
-		return nil, fmt.Errorf("门店不存在")
+		return nil, ErrStoreNotFound
 	}
 	return store, nil
 }
@@ -57,7 +64,7 @@ func (s *StoreService) Update(ctx context.Context, id int64, req dto.UpdateStore
 		return err
 	}
 	if store == nil {
-		return fmt.Errorf("门店不存在")
+		return ErrStoreNotFound
 	}
 	if req.Name != "" {
 		store.Name = req.Name
@@ -75,7 +82,7 @@ func (s *StoreService) Delete(ctx context.Context, id int64) error {
 		return err
 	}
 	if store == nil {
-		return fmt.Errorf("门店不存在")
+		return ErrStoreNotFound
 	}
 
 	hasTerminals, err := s.storeRepo.HasTerminals(ctx, id)
@@ -83,7 +90,7 @@ func (s *StoreService) Delete(ctx context.Context, id int64) error {
 		return err
 	}
 	if hasTerminals {
-		return fmt.Errorf("该门店下存在终端，无法删除")
+		return ErrStoreHasTerminals
 	}
 
 	return s.storeRepo.Delete(ctx, id)

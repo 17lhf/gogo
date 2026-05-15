@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"gogo/internal/config"
+	"gogo/internal/i18n"
 	"gogo/internal/pkg"
 	"gogo/internal/repository"
 )
@@ -35,13 +36,13 @@ func PasswordExpiry(userRepo repository.UserRepository, cfg config.AuthConfig) g
 
 		// Check must_change_password flag
 		if user.MustChangePassword {
-			pkg.Error(c, 403, pkg.CodeMustChangePassword, "请先修改密码")
+			pkg.Error(c, 403, pkg.CodeMustChangePassword, i18n.Localize(c, i18n.MsgMustChangePassword))
 			return
 		}
 
 		// Check password age
 		if time.Since(user.PasswordUpdatedAt) > cfg.PasswordMaxAge {
-			pkg.Error(c, 403, pkg.CodePasswordExpired, "密码已过期，请修改密码")
+			pkg.Error(c, 403, pkg.CodePasswordExpired, i18n.Localize(c, i18n.MsgPasswordExpired))
 			return
 		}
 

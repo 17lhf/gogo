@@ -1,0 +1,141 @@
+[success.ok]
+description = "Operation successful"
+other = "success"
+
+[error.param.invalid]
+other = "Invalid parameter"
+
+[error.param.id_format]
+other = "Invalid ID format"
+
+[error.auth.no_token]
+other = "No authentication provided"
+
+[error.auth.bad_format]
+other = "Invalid authentication format"
+
+[error.auth.token_expired]
+other = "Token expired or invalid"
+
+[error.auth.session_expired]
+other = "Session expired, please login again"
+
+[error.auth.login_failed]
+other = "Login failed"
+
+[error.auth.wrong_credentials]
+other = "Invalid username or password"
+
+[error.auth.wrong_password]
+other = "Incorrect current password"
+
+[error.auth.account_locked]
+other = "Account locked. Please retry in 30 minutes"
+
+[error.auth.account_disabled]
+other = "Account has been disabled"
+
+[error.auth.logout_failed]
+other = "Logout failed"
+
+[error.auth.get_profile_failed]
+other = "Failed to retrieve user profile"
+
+[error.auth.must_change_password]
+other = "Please change your password first"
+
+[error.auth.password_expired]
+other = "Password has expired. Please change your password"
+
+[error.auth.forbidden]
+other = "Insufficient permissions"
+
+[error.user.not_found]
+other = "User not found"
+
+[error.user.username_exists]
+other = "Username already exists"
+
+[error.user.email_exists]
+other = "Email already exists"
+
+[error.user.list_failed]
+other = "Failed to query user list"
+
+[error.role.not_found]
+other = "Role not found"
+
+[error.role.code_exists]
+other = "Role code already exists"
+
+[error.role.list_failed]
+other = "Failed to query role list"
+
+[error.menu.not_found]
+other = "Menu not found"
+
+[error.menu.parent_not_found]
+other = "Parent menu not found"
+
+[error.menu.has_children]
+other = "Cannot delete menu with existing sub-menus"
+
+[error.menu.tree_failed]
+other = "Failed to query menu tree"
+
+[error.store.not_found]
+other = "Store not found"
+
+[error.store.has_terminals]
+other = "Cannot delete store with existing terminals"
+
+[error.store.list_failed]
+other = "Failed to query store list"
+
+[error.terminal.not_found]
+other = "Terminal not found"
+
+[error.terminal.disabled]
+other = "Terminal has been disabled"
+
+[error.terminal.no_token]
+other = "Device token is required"
+
+[error.terminal.invalid_token]
+other = "Invalid device token"
+
+[error.terminal.rotate_failed]
+other = "Token rotation failed"
+
+[error.terminal.list_failed]
+other = "Failed to query terminal list"
+
+[error.terminal.invalid_status]
+other = "Invalid status transition"
+
+[error.validation.password_length]
+other = "Password must be at least 8 characters"
+
+[error.validation.password_upper]
+other = "Password must contain an uppercase letter"
+
+[error.validation.password_lower]
+other = "Password must contain a lowercase letter"
+
+[error.validation.password_digit]
+other = "Password must contain a digit"
+
+[error.general.not_found]
+other = "Endpoint not found"
+
+[error.general.internal_error]
+other = "Internal server error"
+
+[error.general.db_error]
+other = "Database error"
+
+[error.log.operations_failed]
+other = "Failed to query operation logs"
+
+[error.log.terminals_failed]
+other = "Failed to query terminal logs"

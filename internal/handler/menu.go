@@ -1,11 +1,13 @@
 package handler
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 
 	"gogo/internal/dto"
+	"gogo/internal/i18n"
 	"gogo/internal/middleware"
 	"gogo/internal/pkg"
 	"gogo/internal/service"
@@ -25,13 +27,13 @@ func NewMenuHandler(menuSvc *service.MenuService) *MenuHandler {
 func (h *MenuHandler) Create(c *gin.Context) {
 	var req dto.CreateMenuReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		pkg.Error(c, http.StatusBadRequest, pkg.CodeValidationError, "参数错误："+err.Error())
+		pkg.Error(c, http.StatusBadRequest, pkg.CodeValidationError, i18n.Localize(c, i18n.MsgParamInvalid)+": "+err.Error())
 		return
 	}
 
 	menu, err := h.menuSvc.Create(c.Request.Context(), req)
 	if err != nil {
-		pkg.Error(c, http.StatusBadRequest, pkg.CodeParamError, err.Error())
+		handleMenuError(c, err)
 		return
 	}
 
@@ -42,7 +44,7 @@ func (h *MenuHandler) Create(c *gin.Context) {
 func (h *MenuHandler) Tree(c *gin.Context) {
 	tree, err := h.menuSvc.Tree(c.Request.Context())
 	if err != nil {
-		pkg.Error(c, http.StatusInternalServerError, pkg.CodeDBError, "查询菜单树失败")
+		pkg.Error(c, http.StatusInternalServerError, pkg.CodeDBError, i18n.Localize(c, i18n.MsgMenuTreeFailed))
 		return
 	}
 
@@ -53,13 +55,13 @@ func (h *MenuHandler) Tree(c *gin.Context) {
 func (h *MenuHandler) GetByID(c *gin.Context) {
 	id, err := middleware.GetInt64Param(c, "id")
 	if err != nil {
-		pkg.Error(c, http.StatusBadRequest, pkg.CodeParamError, "ID格式错误")
+		pkg.Error(c, http.StatusBadRequest, pkg.CodeParamError, i18n.Localize(c, i18n.MsgIDFormat))
 		return
 	}
 
 	menu, err := h.menuSvc.GetByID(c.Request.Context(), id)
 	if err != nil {
-		pkg.Error(c, http.StatusNotFound, pkg.CodeParamError, err.Error())
+		handleMenuError(c, err)
 		return
 	}
 
@@ -70,18 +72,18 @@ func (h *MenuHandler) GetByID(c *gin.Context) {
 func (h *MenuHandler) Update(c *gin.Context) {
 	id, err := middleware.GetInt64Param(c, "id")
 	if err != nil {
-		pkg.Error(c, http.StatusBadRequest, pkg.CodeParamError, "ID格式错误")
+		pkg.Error(c, http.StatusBadRequest, pkg.CodeParamError, i18n.Localize(c, i18n.MsgIDFormat))
 		return
 	}
 
 	var req dto.UpdateMenuReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		pkg.Error(c, http.StatusBadRequest, pkg.CodeValidationError, "参数错误："+err.Error())
+		pkg.Error(c, http.StatusBadRequest, pkg.CodeValidationError, i18n.Localize(c, i18n.MsgParamInvalid)+": "+err.Error())
 		return
 	}
 
 	if err := h.menuSvc.Update(c.Request.Context(), id, req); err != nil {
-		pkg.Error(c, http.StatusNotFound, pkg.CodeParamError, err.Error())
+		handleMenuError(c, err)
 		return
 	}
 
@@ -92,14 +94,27 @@ func (h *MenuHandler) Update(c *gin.Context) {
 func (h *MenuHandler) Delete(c *gin.Context) {
 	id, err := middleware.GetInt64Param(c, "id")
 	if err != nil {
-		pkg.Error(c, http.StatusBadRequest, pkg.CodeParamError, "ID格式错误")
+		pkg.Error(c, http.StatusBadRequest, pkg.CodeParamError, i18n.Localize(c, i18n.MsgIDFormat))
 		return
 	}
 
 	if err := h.menuSvc.Delete(c.Request.Context(), id); err != nil {
-		pkg.Error(c, http.StatusBadRequest, pkg.CodeParamError, err.Error())
+		handleMenuError(c, err)
 		return
 	}
 
 	pkg.Success(c, nil)
+}
+
+func handleMenuError(c *gin.Context, err error) {
+	switch {
+	case errors.Is(err, service.ErrMenuNotFound):
+		pkg.Error(c, http.StatusNotFound, pkg.CodeParamError, i18n.Localize(c, i18n.MsgMenuNotFound))
+	case errors.Is(err, service.ErrParentMenuNotFound):
+		pkg.Error(c, http.StatusBadRequest, pkg.CodeParamError, i18n.Localize(c, i18n.MsgMenuParentNotFound))
+	case errors.Is(err, service.ErrMenuHasChildren):
+		pkg.Error(c, http.StatusBadRequest, pkg.CodeParamError, i18n.Localize(c, i18n.MsgMenuHasChildren))
+	default:
+		pkg.Error(c, http.StatusInternalServerError, pkg.CodeInternalError, err.Error())
+	}
 }

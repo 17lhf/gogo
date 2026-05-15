@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
@@ -207,7 +208,7 @@ func TestAuthService_ChangePassword_WeakNew(t *testing.T) {
 	req := dto.ChangePasswordReq{OldPassword: "Test1234", NewPassword: "short"}
 	err := svc.ChangePassword(context.Background(), 1, req)
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "密码长度不能少于8位")
+	assert.True(t, errors.Is(err, pkg.ErrPasswordTooShort))
 }
 
 func TestAuthService_Me(t *testing.T) {

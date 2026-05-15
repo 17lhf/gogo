@@ -2,12 +2,20 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"gogo/internal/dto"
 	"gogo/internal/model"
 	"gogo/internal/pkg"
 	"gogo/internal/repository"
+)
+
+// Sentinel errors for user service.
+var (
+	ErrUserNotFound   = errors.New("user not found")
+	ErrUsernameExists = errors.New("username already exists")
+	ErrEmailExists    = errors.New("email already exists")
 )
 
 // UserService handles user management business logic.
@@ -32,7 +40,7 @@ func (s *UserService) Create(ctx context.Context, req dto.CreateUserReq) (*model
 		return nil, fmt.Errorf("check username: %w", err)
 	}
 	if existing != nil {
-		return nil, fmt.Errorf("用户名已存在")
+		return nil, ErrUsernameExists
 	}
 
 	// Check email uniqueness
@@ -41,7 +49,7 @@ func (s *UserService) Create(ctx context.Context, req dto.CreateUserReq) (*model
 		return nil, fmt.Errorf("check email: %w", err)
 	}
 	if existing != nil {
-		return nil, fmt.Errorf("邮箱已存在")
+		return nil, ErrEmailExists
 	}
 
 	hash, err := pkg.HashPassword(req.Password)
@@ -72,7 +80,7 @@ func (s *UserService) GetByID(ctx context.Context, id int64) (*model.User, error
 		return nil, err
 	}
 	if user == nil {
-		return nil, fmt.Errorf("用户不存在")
+		return nil, ErrUserNotFound
 	}
 	return user, nil
 }
@@ -89,13 +97,13 @@ func (s *UserService) Update(ctx context.Context, id int64, req dto.UpdateUserRe
 		return err
 	}
 	if user == nil {
-		return fmt.Errorf("用户不存在")
+		return ErrUserNotFound
 	}
 
 	if req.Email != "" && req.Email != user.Email {
 		existing, _ := s.userRepo.GetByEmail(ctx, req.Email)
 		if existing != nil && existing.ID != id {
-			return fmt.Errorf("邮箱已存在")
+			return ErrEmailExists
 		}
 		user.Email = req.Email
 	}
@@ -119,7 +127,7 @@ func (s *UserService) Delete(ctx context.Context, id int64) error {
 		return err
 	}
 	if user == nil {
-		return fmt.Errorf("用户不存在")
+		return ErrUserNotFound
 	}
 	return s.userRepo.Delete(ctx, id)
 }
@@ -131,7 +139,7 @@ func (s *UserService) ResetPassword(ctx context.Context, id int64, password stri
 		return err
 	}
 	if user == nil {
-		return fmt.Errorf("用户不存在")
+		return ErrUserNotFound
 	}
 
 	if err := pkg.ValidatePasswordStrength(password); err != nil {
@@ -153,7 +161,7 @@ func (s *UserService) AssignRoles(ctx context.Context, userID int64, roleIDs []i
 		return err
 	}
 	if user == nil {
-		return fmt.Errorf("用户不存在")
+		return ErrUserNotFound
 	}
 	return s.userRepo.SetRoles(ctx, userID, roleIDs)
 }
@@ -165,7 +173,7 @@ func (s *UserService) AssignStores(ctx context.Context, userID int64, storeIDs [
 		return err
 	}
 	if user == nil {
-		return fmt.Errorf("用户不存在")
+		return ErrUserNotFound
 	}
 	return s.userRepo.SetStores(ctx, userID, storeIDs)
 }

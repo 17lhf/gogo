@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"gogo/internal/dto"
+	"gogo/internal/i18n"
 	"gogo/internal/pkg"
 	"gogo/internal/repository"
 )
@@ -24,13 +25,13 @@ func NewLogHandler(logRepo repository.LogRepository) *LogHandler {
 func (h *LogHandler) ListOperations(c *gin.Context) {
 	var req dto.OperationLogListReq
 	if err := c.ShouldBindQuery(&req); err != nil {
-		pkg.Error(c, http.StatusBadRequest, pkg.CodeValidationError, "参数错误："+err.Error())
+		pkg.Error(c, http.StatusBadRequest, pkg.CodeValidationError, i18n.Localize(c, i18n.MsgParamInvalid)+": "+err.Error())
 		return
 	}
 
 	logs, total, err := h.logRepo.ListOperations(c.Request.Context(), req)
 	if err != nil {
-		pkg.Error(c, http.StatusInternalServerError, pkg.CodeDBError, "查询操作日志失败")
+		pkg.Error(c, http.StatusInternalServerError, pkg.CodeDBError, i18n.Localize(c, i18n.MsgLogOperationsFailed))
 		return
 	}
 
@@ -47,13 +48,13 @@ func (h *LogHandler) ListOperations(c *gin.Context) {
 func (h *LogHandler) ListTerminals(c *gin.Context) {
 	var req dto.TerminalLogListReq
 	if err := c.ShouldBindQuery(&req); err != nil {
-		pkg.Error(c, http.StatusBadRequest, pkg.CodeValidationError, "参数错误："+err.Error())
+		pkg.Error(c, http.StatusBadRequest, pkg.CodeValidationError, i18n.Localize(c, i18n.MsgParamInvalid)+": "+err.Error())
 		return
 	}
 
 	logs, total, err := h.logRepo.ListTerminals(c.Request.Context(), req)
 	if err != nil {
-		pkg.Error(c, http.StatusInternalServerError, pkg.CodeDBError, "查询终端日志失败")
+		pkg.Error(c, http.StatusInternalServerError, pkg.CodeDBError, i18n.Localize(c, i18n.MsgLogTerminalsFailed))
 		return
 	}
 

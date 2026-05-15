@@ -1,12 +1,13 @@
 package handler
 
 import (
+	"errors"
 	"net/http"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 
 	"gogo/internal/dto"
+	"gogo/internal/i18n"
 	"gogo/internal/middleware"
 	"gogo/internal/pkg"
 	"gogo/internal/service"
@@ -26,7 +27,7 @@ func NewUserHandler(userSvc *service.UserService) *UserHandler {
 func (h *UserHandler) Create(c *gin.Context) {
 	var req dto.CreateUserReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		pkg.Error(c, http.StatusBadRequest, pkg.CodeValidationError, "参数错误："+err.Error())
+		pkg.Error(c, http.StatusBadRequest, pkg.CodeValidationError, i18n.Localize(c, i18n.MsgParamInvalid)+": "+err.Error())
 		return
 	}
 
@@ -43,7 +44,7 @@ func (h *UserHandler) Create(c *gin.Context) {
 func (h *UserHandler) GetByID(c *gin.Context) {
 	id, err := middleware.GetInt64Param(c, "id")
 	if err != nil {
-		pkg.Error(c, http.StatusBadRequest, pkg.CodeParamError, "ID格式错误")
+		pkg.Error(c, http.StatusBadRequest, pkg.CodeParamError, i18n.Localize(c, i18n.MsgIDFormat))
 		return
 	}
 
@@ -60,13 +61,13 @@ func (h *UserHandler) GetByID(c *gin.Context) {
 func (h *UserHandler) List(c *gin.Context) {
 	var req dto.UserListReq
 	if err := c.ShouldBindQuery(&req); err != nil {
-		pkg.Error(c, http.StatusBadRequest, pkg.CodeValidationError, "参数错误："+err.Error())
+		pkg.Error(c, http.StatusBadRequest, pkg.CodeValidationError, i18n.Localize(c, i18n.MsgParamInvalid)+": "+err.Error())
 		return
 	}
 
 	users, total, err := h.userSvc.List(c.Request.Context(), req)
 	if err != nil {
-		pkg.Error(c, http.StatusInternalServerError, pkg.CodeDBError, "查询用户列表失败")
+		pkg.Error(c, http.StatusInternalServerError, pkg.CodeDBError, i18n.Localize(c, i18n.MsgUserListFailed))
 		return
 	}
 
@@ -84,13 +85,13 @@ func (h *UserHandler) List(c *gin.Context) {
 func (h *UserHandler) Update(c *gin.Context) {
 	id, err := middleware.GetInt64Param(c, "id")
 	if err != nil {
-		pkg.Error(c, http.StatusBadRequest, pkg.CodeParamError, "ID格式错误")
+		pkg.Error(c, http.StatusBadRequest, pkg.CodeParamError, i18n.Localize(c, i18n.MsgIDFormat))
 		return
 	}
 
 	var req dto.UpdateUserReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		pkg.Error(c, http.StatusBadRequest, pkg.CodeValidationError, "参数错误："+err.Error())
+		pkg.Error(c, http.StatusBadRequest, pkg.CodeValidationError, i18n.Localize(c, i18n.MsgParamInvalid)+": "+err.Error())
 		return
 	}
 
@@ -106,7 +107,7 @@ func (h *UserHandler) Update(c *gin.Context) {
 func (h *UserHandler) Delete(c *gin.Context) {
 	id, err := middleware.GetInt64Param(c, "id")
 	if err != nil {
-		pkg.Error(c, http.StatusBadRequest, pkg.CodeParamError, "ID格式错误")
+		pkg.Error(c, http.StatusBadRequest, pkg.CodeParamError, i18n.Localize(c, i18n.MsgIDFormat))
 		return
 	}
 
@@ -122,13 +123,13 @@ func (h *UserHandler) Delete(c *gin.Context) {
 func (h *UserHandler) ResetPassword(c *gin.Context) {
 	id, err := middleware.GetInt64Param(c, "id")
 	if err != nil {
-		pkg.Error(c, http.StatusBadRequest, pkg.CodeParamError, "ID格式错误")
+		pkg.Error(c, http.StatusBadRequest, pkg.CodeParamError, i18n.Localize(c, i18n.MsgIDFormat))
 		return
 	}
 
 	var req dto.ResetPasswordReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		pkg.Error(c, http.StatusBadRequest, pkg.CodeValidationError, "参数错误："+err.Error())
+		pkg.Error(c, http.StatusBadRequest, pkg.CodeValidationError, i18n.Localize(c, i18n.MsgParamInvalid)+": "+err.Error())
 		return
 	}
 
@@ -144,13 +145,13 @@ func (h *UserHandler) ResetPassword(c *gin.Context) {
 func (h *UserHandler) AssignRoles(c *gin.Context) {
 	id, err := middleware.GetInt64Param(c, "id")
 	if err != nil {
-		pkg.Error(c, http.StatusBadRequest, pkg.CodeParamError, "ID格式错误")
+		pkg.Error(c, http.StatusBadRequest, pkg.CodeParamError, i18n.Localize(c, i18n.MsgIDFormat))
 		return
 	}
 
 	var req dto.AssignRolesReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		pkg.Error(c, http.StatusBadRequest, pkg.CodeValidationError, "参数错误："+err.Error())
+		pkg.Error(c, http.StatusBadRequest, pkg.CodeValidationError, i18n.Localize(c, i18n.MsgParamInvalid)+": "+err.Error())
 		return
 	}
 
@@ -166,13 +167,13 @@ func (h *UserHandler) AssignRoles(c *gin.Context) {
 func (h *UserHandler) AssignStores(c *gin.Context) {
 	id, err := middleware.GetInt64Param(c, "id")
 	if err != nil {
-		pkg.Error(c, http.StatusBadRequest, pkg.CodeParamError, "ID格式错误")
+		pkg.Error(c, http.StatusBadRequest, pkg.CodeParamError, i18n.Localize(c, i18n.MsgIDFormat))
 		return
 	}
 
 	var req dto.AssignStoresReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		pkg.Error(c, http.StatusBadRequest, pkg.CodeValidationError, "参数错误："+err.Error())
+		pkg.Error(c, http.StatusBadRequest, pkg.CodeValidationError, i18n.Localize(c, i18n.MsgParamInvalid)+": "+err.Error())
 		return
 	}
 
@@ -185,15 +186,22 @@ func (h *UserHandler) AssignStores(c *gin.Context) {
 }
 
 func handleUserError(c *gin.Context, err error) {
-	msg := err.Error()
 	switch {
-	case strings.Contains(msg, "不存在"):
-		pkg.Error(c, http.StatusNotFound, pkg.CodeParamError, msg)
-	case strings.Contains(msg, "已存在"):
-		pkg.Error(c, http.StatusConflict, pkg.CodeParamError, msg)
-	case strings.Contains(msg, "密码"):
-		pkg.Error(c, http.StatusBadRequest, pkg.CodeParamError, msg)
+	case errors.Is(err, service.ErrUserNotFound):
+		pkg.Error(c, http.StatusNotFound, pkg.CodeParamError, i18n.Localize(c, i18n.MsgUserNotFound))
+	case errors.Is(err, service.ErrUsernameExists):
+		pkg.Error(c, http.StatusConflict, pkg.CodeParamError, i18n.Localize(c, i18n.MsgUsernameExists))
+	case errors.Is(err, service.ErrEmailExists):
+		pkg.Error(c, http.StatusConflict, pkg.CodeParamError, i18n.Localize(c, i18n.MsgEmailExists))
+	case errors.Is(err, pkg.ErrPasswordTooShort):
+		pkg.Error(c, http.StatusBadRequest, pkg.CodeParamError, i18n.Localize(c, i18n.MsgPasswordLength))
+	case errors.Is(err, pkg.ErrPasswordNoUpper):
+		pkg.Error(c, http.StatusBadRequest, pkg.CodeParamError, i18n.Localize(c, i18n.MsgPasswordUpper))
+	case errors.Is(err, pkg.ErrPasswordNoLower):
+		pkg.Error(c, http.StatusBadRequest, pkg.CodeParamError, i18n.Localize(c, i18n.MsgPasswordLower))
+	case errors.Is(err, pkg.ErrPasswordNoDigit):
+		pkg.Error(c, http.StatusBadRequest, pkg.CodeParamError, i18n.Localize(c, i18n.MsgPasswordDigit))
 	default:
-		pkg.Error(c, http.StatusInternalServerError, pkg.CodeInternalError, msg)
+		pkg.Error(c, http.StatusInternalServerError, pkg.CodeInternalError, err.Error())
 	}
 }

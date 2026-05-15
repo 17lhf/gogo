@@ -4,6 +4,8 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+
+	"gogo/internal/i18n"
 )
 
 const (
@@ -34,14 +36,14 @@ const (
 
 // Success writes a standard success response.
 func Success(c *gin.Context, data interface{}) {
-	c.JSON(http.StatusOK, gin.H{"code": CodeSuccess, "msg": "success", "data": data})
+	c.JSON(http.StatusOK, gin.H{"code": CodeSuccess, "msg": i18n.Localize(c, i18n.MsgSuccess), "data": data})
 }
 
 // Paginated writes a paginated success response.
 func Paginated(c *gin.Context, list interface{}, total int64, page, pageSize int) {
 	c.JSON(http.StatusOK, gin.H{
 		"code": CodeSuccess,
-		"msg":  "success",
+		"msg":  i18n.Localize(c, i18n.MsgSuccess),
 		"data": gin.H{"list": list, "total": total, "page": page, "page_size": pageSize},
 	})
 }

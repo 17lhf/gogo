@@ -8,6 +8,7 @@ import (
 
 	"gogo/internal/cache"
 	"gogo/internal/config"
+	"gogo/internal/i18n"
 	"gogo/internal/pkg"
 )
 
@@ -23,26 +24,26 @@ func Auth(sessionCache *cache.SessionCache, cfg config.AuthConfig) gin.HandlerFu
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
-			pkg.Error(c, 401, pkg.CodeUnauthorized, "未提供认证信息")
+			pkg.Error(c, 401, pkg.CodeUnauthorized, i18n.Localize(c, i18n.MsgAuthNoToken))
 			return
 		}
 
 		parts := strings.SplitN(authHeader, " ", 2)
 		if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
-			pkg.Error(c, 401, pkg.CodeUnauthorized, "认证格式错误")
+			pkg.Error(c, 401, pkg.CodeUnauthorized, i18n.Localize(c, i18n.MsgAuthBadFormat))
 			return
 		}
 
 		claims, err := pkg.ParseToken(cfg.JWTSecret, parts[1])
 		if err != nil {
-			pkg.Error(c, 401, pkg.CodeTokenExpired, "Token已过期或无效")
+			pkg.Error(c, 401, pkg.CodeTokenExpired, i18n.Localize(c, i18n.MsgAuthTokenExpired))
 			return
 		}
 
 		// Validate session exists in Redis
 		stored, err := sessionCache.Get(c.Request.Context(), claims.UserID, claims.ID)
 		if err != nil || stored == nil {
-			pkg.Error(c, 401, pkg.CodeSessionNotFound, "会话已失效，请重新登录")
+			pkg.Error(c, 401, pkg.CodeSessionNotFound, i18n.Localize(c, i18n.MsgAuthSessionExpired))
 			return
 		}
 

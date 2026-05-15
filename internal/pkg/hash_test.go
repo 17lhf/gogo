@@ -1,6 +1,7 @@
 package pkg
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -30,15 +31,15 @@ func TestValidatePasswordStrength(t *testing.T) {
 		name     string
 		password string
 		wantErr  bool
-		errMsg   string
+		errCheck func(error) bool
 	}{
-		{"valid password", "Test1234", false, ""},
-		{"too short", "Te1", true, "密码长度不能少于8位"},
-		{"no uppercase", "test1234", true, "密码必须包含大写字母"},
-		{"no lowercase", "TEST1234", true, "密码必须包含小写字母"},
-		{"no digit", "TestTest", true, "密码必须包含数字"},
-		{"exactly 8 chars", "Test1234", false, ""},
-		{"special chars ok", "Test@#$%1", false, ""},
+		{"valid password", "Test1234", false, nil},
+		{"too short", "Te1", true, func(e error) bool { return errors.Is(e, ErrPasswordTooShort) }},
+		{"no uppercase", "test1234", true, func(e error) bool { return errors.Is(e, ErrPasswordNoUpper) }},
+		{"no lowercase", "TEST1234", true, func(e error) bool { return errors.Is(e, ErrPasswordNoLower) }},
+		{"no digit", "TestTest", true, func(e error) bool { return errors.Is(e, ErrPasswordNoDigit) }},
+		{"exactly 8 chars", "Test1234", false, nil},
+		{"special chars ok", "Test@#$%1", false, nil},
 	}
 
 	for _, tt := range tests {
@@ -46,7 +47,7 @@ func TestValidatePasswordStrength(t *testing.T) {
 			err := ValidatePasswordStrength(tt.password)
 			if tt.wantErr {
 				require.Error(t, err)
-				assert.Contains(t, err.Error(), tt.errMsg)
+				assert.True(t, tt.errCheck(err), "unexpected error: %v", err)
 			} else {
 				assert.NoError(t, err)
 			}

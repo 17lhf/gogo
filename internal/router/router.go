@@ -7,6 +7,7 @@ import (
 	"gogo/internal/cache"
 	"gogo/internal/config"
 	"gogo/internal/handler"
+	"gogo/internal/i18n"
 	"gogo/internal/middleware"
 	"gogo/internal/pkg"
 	"gogo/internal/repository"
@@ -34,6 +35,7 @@ type Dependencies struct {
 func Register(r *gin.Engine, d *Dependencies) {
 	// Global middleware
 	r.Use(gin.Recovery())
+	r.Use(i18n.Middleware())
 
 	// Health check (no auth)
 	r.GET("/health", func(c *gin.Context) {
@@ -140,6 +142,6 @@ func Register(r *gin.Engine, d *Dependencies) {
 
 	// 404 handler
 	r.NoRoute(func(c *gin.Context) {
-		pkg.Error(c, 404, pkg.CodeParamError, "接口不存在")
+		pkg.Error(c, 404, pkg.CodeParamError, i18n.Localize(c, i18n.MsgEndpointNotFound))
 	})
 }
