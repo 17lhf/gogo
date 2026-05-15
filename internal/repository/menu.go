@@ -18,6 +18,7 @@ type MenuRepository interface {
 	Delete(ctx context.Context, id int64) error
 	HasChildren(ctx context.Context, parentID int64) (bool, error)
 	GetMenusByRoleID(ctx context.Context, roleID int64) ([]int64, error)
+	GetButtonAPIsByIDs(ctx context.Context, ids []int64) (map[int64][2]string, error)
 }
 
 type menuRepository struct {
@@ -68,4 +69,28 @@ func (r *menuRepository) GetMenusByRoleID(ctx context.Context, roleID int64) ([]
 		Where("role_id = ?", roleID).
 		Pluck("menu_id", &menuIDs).Error
 	return menuIDs, err
+}
+
+func (r *menuRepository) GetButtonAPIsByIDs(ctx context.Context, ids []int64) (map[int64][2]string, error) {
+	if len(ids) == 0 {
+		return map[int64][2]string{}, nil
+	}
+	type row struct {
+		ID        int64
+		ApiPath   string
+		ApiMethod string
+	}
+	var rows []row
+	err := r.db.WithContext(ctx).Model(&model.Menu{}).
+		Select("id, api_path, api_method").
+		Where("id IN ? AND type = ? AND api_path != '' AND api_method != ''", ids, model.MenuTypeButton).
+		Find(&rows).Error
+	if err != nil {
+		return nil, err
+	}
+	result := make(map[int64][2]string, len(rows))
+	for _, r := range rows {
+		result[r.ID] = [2]string{r.ApiPath, r.ApiMethod}
+	}
+	return result, nil
 }

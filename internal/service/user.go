@@ -4,7 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 
+	"gogo/internal/cache"
 	"gogo/internal/dto"
 	"gogo/internal/model"
 	"gogo/internal/pkg"
@@ -20,12 +22,13 @@ var (
 
 // UserService handles user management business logic.
 type UserService struct {
-	userRepo repository.UserRepository
+	userRepo     repository.UserRepository
+	sessionCache *cache.SessionCache
 }
 
 // NewUserService creates a new UserService.
-func NewUserService(userRepo repository.UserRepository) *UserService {
-	return &UserService{userRepo: userRepo}
+func NewUserService(userRepo repository.UserRepository, sessionCache *cache.SessionCache) *UserService {
+	return &UserService{userRepo: userRepo, sessionCache: sessionCache}
 }
 
 // Create creates a new user with validated password.
@@ -154,7 +157,10 @@ func (s *UserService) ResetPassword(ctx context.Context, id int64, password stri
 	return s.userRepo.UpdatePassword(ctx, id, hash, true)
 }
 
-// AssignRoles assigns roles to a user.
+// AssignRoles assigns roles to a user and invalidates all their sessions.
+//
+// Invalidating sessions forces the user to re-login, ensuring the new JWT
+// will carry the updated role set (eliminating JWT role staleness).
 func (s *UserService) AssignRoles(ctx context.Context, userID int64, roleIDs []int64) error {
 	user, err := s.userRepo.GetByID(ctx, userID)
 	if err != nil {
@@ -163,7 +169,17 @@ func (s *UserService) AssignRoles(ctx context.Context, userID int64, roleIDs []i
 	if user == nil {
 		return ErrUserNotFound
 	}
-	return s.userRepo.SetRoles(ctx, userID, roleIDs)
+	if err := s.userRepo.SetRoles(ctx, userID, roleIDs); err != nil {
+		return err
+	}
+
+	// Force re-login so the JWT carries updated roles
+	if s.sessionCache != nil {
+		if err := s.sessionCache.DeleteAllForUser(ctx, userID); err != nil {
+			slog.Warn("failed to invalidate sessions after role change", "user_id", userID, "error", err)
+		}
+	}
+	return nil
 }
 
 // AssignStores assigns stores to a user.

@@ -19,7 +19,8 @@ type RoleRepository interface {
 	Delete(ctx context.Context, id int64) error
 
 	GetMenuIDs(ctx context.Context, roleID int64) ([]int64, error)
-	SetMenus(ctx context.Context, roleID int64, menuIDs []int64) error
+	SetMenusAndSyncPolicies(ctx context.Context, roleID int64, menuIDs []int64, roleCode string, policies [][2]string) error
+	DeleteWithCleanup(ctx context.Context, roleID int64, roleCode string) error
 }
 
 type roleRepository struct {
@@ -75,12 +76,37 @@ func (r *roleRepository) GetMenuIDs(ctx context.Context, roleID int64) ([]int64,
 	return menuIDs, err
 }
 
-func (r *roleRepository) SetMenus(ctx context.Context, roleID int64, menuIDs []int64) error {
+type casbinRuleRow struct {
+	Ptype string `gorm:"column:p_type"`
+	V0    string `gorm:"column:v0"`
+	V1    string `gorm:"column:v1"`
+	V2    string `gorm:"column:v2"`
+}
+
+func (casbinRuleRow) TableName() string { return "casbin_rule" }
+
+type roleMenuRow struct {
+	RoleID int64 `gorm:"column:role_id"`
+	MenuID int64 `gorm:"column:menu_id"`
+}
+
+func (roleMenuRow) TableName() string { return "role_menus" }
+
+type userRoleRow struct {
+	UserID int64 `gorm:"column:user_id"`
+	RoleID int64 `gorm:"column:role_id"`
+}
+
+func (userRoleRow) TableName() string { return "user_roles" }
+
+// SetMenusAndSyncPolicies updates role_menus and casbin_rule atomically.
+//
+// Within a single GORM transaction it:
+//  1. Replaces role_menus rows for this role
+//  2. Replaces casbin_rule rows for this role
+func (r *roleRepository) SetMenusAndSyncPolicies(ctx context.Context, roleID int64, menuIDs []int64, roleCode string, policies [][2]string) error {
 	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if err := tx.Where("role_id = ?", roleID).Delete(&struct {
-			RoleID int64 `gorm:"column:role_id"`
-			MenuID int64 `gorm:"column:menu_id"`
-		}{}).Error; err != nil {
+		if err := tx.Where("role_id = ?", roleID).Delete(&roleMenuRow{}).Error; err != nil {
 			return err
 		}
 		for _, menuID := range menuIDs {
@@ -88,6 +114,32 @@ func (r *roleRepository) SetMenus(ctx context.Context, roleID int64, menuIDs []i
 				return err
 			}
 		}
+
+		if err := tx.Where("p_type = ? AND v0 = ?", "p", roleCode).Delete(&casbinRuleRow{}).Error; err != nil {
+			return err
+		}
+		for _, pol := range policies {
+			if err := tx.Exec("INSERT INTO casbin_rule (p_type, v0, v1, v2) VALUES (?, ?, ?, ?)", "p", roleCode, pol[0], pol[1]).Error; err != nil {
+				return err
+			}
+		}
+
 		return nil
+	})
+}
+
+// DeleteWithCleanup removes a role and all its associated data in one transaction.
+func (r *roleRepository) DeleteWithCleanup(ctx context.Context, roleID int64, roleCode string) error {
+	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := tx.Where("role_id = ?", roleID).Delete(&roleMenuRow{}).Error; err != nil {
+			return err
+		}
+		if err := tx.Where("role_id = ?", roleID).Delete(&userRoleRow{}).Error; err != nil {
+			return err
+		}
+		if err := tx.Where("p_type = ? AND v0 = ?", "p", roleCode).Delete(&casbinRuleRow{}).Error; err != nil {
+			return err
+		}
+		return tx.Delete(&model.Role{}, roleID).Error
 	})
 }

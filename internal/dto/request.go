@@ -81,6 +81,8 @@ type CreateMenuReq struct {
 	Icon      string `json:"icon" binding:"max=64"`
 	Type      model.MenuType `json:"type" binding:"required,menutype"`
 	Perms     string `json:"perms" binding:"max=128"`
+	ApiPath   string `json:"api_path" binding:"max=256"`
+	ApiMethod string `json:"api_method" binding:"max=10"`
 	SortOrder int    `json:"sort_order"`
 }
 
@@ -92,6 +94,8 @@ type UpdateMenuReq struct {
 	Component string `json:"component" binding:"max=256"`
 	Icon      string `json:"icon" binding:"max=64"`
 	Perms     string `json:"perms" binding:"max=128"`
+	ApiPath   string `json:"api_path" binding:"max=256"`
+	ApiMethod string `json:"api_method" binding:"max=10"`
 	SortOrder *int   `json:"sort_order"`
 	Visible   *bool  `json:"visible"`
 }

@@ -64,11 +64,6 @@ func main() {
 		log.Fatalf("gorm init: %v", err)
 	}
 
-	// Seed initial data
-	if err := db.Seed(gormDB); err != nil {
-		log.Fatalf("seed data: %v", err)
-	}
-
 	// Redis
 	rdb := cache.New(cfg.Redis.Addr, cfg.Redis.Password)
 	defer rdb.Close()
@@ -100,8 +95,8 @@ func main() {
 
 	// Services
 	authSvc := service.NewAuthService(userRepo, roleRepo, sessionCache, lockoutCache, cfg.Auth)
-	userSvc := service.NewUserService(userRepo)
-	roleSvc := service.NewRoleService(roleRepo, menuRepo)
+	userSvc := service.NewUserService(userRepo, sessionCache)
+	roleSvc := service.NewRoleService(roleRepo, menuRepo, enforcer)
 	menuSvc := service.NewMenuService(menuRepo)
 	storeSvc := service.NewStoreService(storeRepo)
 	terminalSvc := service.NewTerminalService(terminalRepo, storeRepo, heartbeatCache, logRepo)

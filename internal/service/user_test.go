@@ -15,7 +15,7 @@ import (
 
 func TestUserService_Create(t *testing.T) {
 	repo := newUserRepoStub()
-	svc := NewUserService(repo)
+	svc := NewUserService(repo, nil)
 
 	req := dto.CreateUserReq{
 		Username: "newuser",
@@ -37,7 +37,7 @@ func TestUserService_Create_DuplicateUsername(t *testing.T) {
 	repo := newUserRepoStub()
 	repo.users[1] = &model.User{ID: 1, Username: "existing", Email: "old@example.com", Password: hash, Status: 1}
 
-	svc := NewUserService(repo)
+	svc := NewUserService(repo, nil)
 
 	req := dto.CreateUserReq{
 		Username: "existing",
@@ -54,7 +54,7 @@ func TestUserService_Create_DuplicateEmail(t *testing.T) {
 	repo := newUserRepoStub()
 	repo.users[1] = &model.User{ID: 1, Username: "user1", Email: "existing@example.com", Password: hash, Status: 1}
 
-	svc := NewUserService(repo)
+	svc := NewUserService(repo, nil)
 
 	req := dto.CreateUserReq{
 		Username: "user2",
@@ -68,7 +68,7 @@ func TestUserService_Create_DuplicateEmail(t *testing.T) {
 
 func TestUserService_GetByID_NotFound(t *testing.T) {
 	repo := newUserRepoStub()
-	svc := NewUserService(repo)
+	svc := NewUserService(repo, nil)
 
 	_, err := svc.GetByID(context.Background(), 999)
 	assert.Error(t, err)
@@ -77,7 +77,7 @@ func TestUserService_GetByID_NotFound(t *testing.T) {
 
 func TestUserService_Delete_NotFound(t *testing.T) {
 	repo := newUserRepoStub()
-	svc := NewUserService(repo)
+	svc := NewUserService(repo, nil)
 
 	err := svc.Delete(context.Background(), 999)
 	assert.Error(t, err)
@@ -89,7 +89,7 @@ func TestUserService_ResetPassword(t *testing.T) {
 	repo := newUserRepoStub()
 	repo.users[1] = &model.User{ID: 1, Username: "user1", Email: "test@example.com", Password: hash, Status: 1}
 
-	svc := NewUserService(repo)
+	svc := NewUserService(repo, nil)
 
 	err := svc.ResetPassword(context.Background(), 1, "NewPass1")
 	assert.NoError(t, err)
@@ -100,7 +100,7 @@ func TestUserService_AssignRoles(t *testing.T) {
 	repo := newUserRepoStub()
 	repo.users[1] = &model.User{ID: 1, Username: "user1", Email: "test@example.com", Password: hash, Status: 1}
 
-	svc := NewUserService(repo)
+	svc := NewUserService(repo, nil)
 
 	err := svc.AssignRoles(context.Background(), 1, []int64{1, 2})
 	assert.NoError(t, err)
@@ -111,7 +111,7 @@ func TestUserService_AssignStores(t *testing.T) {
 	repo := newUserRepoStub()
 	repo.users[1] = &model.User{ID: 1, Username: "user1", Email: "test@example.com", Password: hash, Status: 1}
 
-	svc := NewUserService(repo)
+	svc := NewUserService(repo, nil)
 
 	err := svc.AssignStores(context.Background(), 1, []int64{1, 2})
 	assert.NoError(t, err)
@@ -119,7 +119,7 @@ func TestUserService_AssignStores(t *testing.T) {
 
 func TestUserService_Update_NotFound(t *testing.T) {
 	repo := newUserRepoStub()
-	svc := NewUserService(repo)
+	svc := NewUserService(repo, nil)
 
 	err := svc.Update(context.Background(), 999, dto.UpdateUserReq{})
 	assert.Error(t, err)

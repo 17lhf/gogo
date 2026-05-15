@@ -47,6 +47,8 @@ func (s *MenuService) Create(ctx context.Context, req dto.CreateMenuReq) (*model
 		Icon:      req.Icon,
 		Type:      req.Type,
 		Perms:     req.Perms,
+		ApiPath:   req.ApiPath,
+		ApiMethod: req.ApiMethod,
 		SortOrder: req.SortOrder,
 		Visible:   true,
 		Status:    int16(model.UserStatusEnabled),
@@ -131,6 +133,12 @@ func (s *MenuService) Update(ctx context.Context, id int64, req dto.UpdateMenuRe
 	}
 	if req.Perms != "" {
 		menu.Perms = req.Perms
+	}
+	if req.ApiPath != "" {
+		menu.ApiPath = req.ApiPath
+	}
+	if req.ApiMethod != "" {
+		menu.ApiMethod = req.ApiMethod
 	}
 	if req.ParentID != nil {
 		menu.ParentID = *req.ParentID

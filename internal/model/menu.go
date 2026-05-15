@@ -12,6 +12,8 @@ type Menu struct {
 	Icon      string    `gorm:"size:64" json:"icon"`
 	Type      MenuType  `gorm:"not null" json:"type"`
 	Perms     string    `gorm:"size:128" json:"perms"`
+	ApiPath   string    `gorm:"size:256" json:"api_path"`
+	ApiMethod string    `gorm:"size:10" json:"api_method"`
 	SortOrder int       `gorm:"default:0;not null" json:"sort_order"`
 	Visible   bool      `gorm:"default:true;not null" json:"visible"`
 	Status    int16     `gorm:"default:1;not null" json:"status"`

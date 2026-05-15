@@ -55,3 +55,29 @@ func (s *SessionCache) Get(ctx context.Context, userID int64, jti string) (*pkg.
 func (s *SessionCache) Delete(ctx context.Context, userID int64, jti string) error {
 	return s.rdb.Del(ctx, s.key(userID, jti)).Err()
 }
+
+// DeleteAllForUser removes all sessions for a user, forcing re-login.
+// Used when roles change to invalidate JWTs carrying stale role data.
+func (s *SessionCache) DeleteAllForUser(ctx context.Context, userID int64) error {
+	pattern := fmt.Sprintf("session:%d:*", userID)
+	var cursor uint64
+	var keys []string
+	for {
+		var batch []string
+		var err error
+		batch, cursor, err = s.rdb.Scan(ctx, cursor, pattern, 100).Result()
+		if err != nil {
+			return fmt.Errorf("scan sessions for user %d: %w", userID, err)
+		}
+		keys = append(keys, batch...)
+		if cursor == 0 {
+			break
+		}
+	}
+	if len(keys) > 0 {
+		if err := s.rdb.Del(ctx, keys...).Err(); err != nil {
+			return fmt.Errorf("delete sessions for user %d: %w", userID, err)
+		}
+	}
+	return nil
+}

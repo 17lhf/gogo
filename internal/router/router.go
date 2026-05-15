@@ -33,8 +33,6 @@ type Dependencies struct {
 
 // Register sets up all routes and middleware.
 func Register(r *gin.Engine, d *Dependencies) {
-	// Global middleware
-	r.Use(gin.Recovery())
 	r.Use(i18n.Middleware())
 
 	// Health check (no auth)

@@ -116,7 +116,10 @@ func (s *roleRepoStub) Delete(ctx context.Context, id int64) error              
 func (s *roleRepoStub) GetMenuIDs(ctx context.Context, roleID int64) ([]int64, error) {
 	return nil, nil
 }
-func (s *roleRepoStub) SetMenus(ctx context.Context, roleID int64, menuIDs []int64) error {
+func (s *roleRepoStub) SetMenusAndSyncPolicies(ctx context.Context, roleID int64, menuIDs []int64, roleCode string, policies [][2]string) error {
+	return nil
+}
+func (s *roleRepoStub) DeleteWithCleanup(ctx context.Context, roleID int64, roleCode string) error {
 	return nil
 }
 

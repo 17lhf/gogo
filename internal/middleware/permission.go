@@ -1,6 +1,8 @@
 package middleware
 
 import (
+	"log/slog"
+
 	"github.com/casbin/casbin/v2"
 	"github.com/gin-gonic/gin"
 
@@ -28,7 +30,11 @@ func Permission(enforcer *casbin.Enforcer) gin.HandlerFunc {
 
 		for _, role := range roles {
 			ok, err := enforcer.Enforce(role, path, method)
-			if err == nil && ok {
+			if err != nil {
+				slog.Error("casbin enforce error", "role", role, "path", path, "method", method, "error", err)
+				continue
+			}
+			if ok {
 				c.Next()
 				return
 			}

@@ -68,6 +68,16 @@ func (s *menuRepoStub) GetMenusByRoleID(ctx context.Context, roleID int64) ([]in
 	return nil, nil
 }
 
+func (s *menuRepoStub) GetButtonAPIsByIDs(ctx context.Context, ids []int64) (map[int64][2]string, error) {
+	result := make(map[int64][2]string, len(ids))
+	for _, id := range ids {
+		if m, ok := s.menus[id]; ok && m.Type == model.MenuTypeButton && m.ApiPath != "" && m.ApiMethod != "" {
+			result[id] = [2]string{m.ApiPath, m.ApiMethod}
+		}
+	}
+	return result, nil
+}
+
 func TestMenuService_Tree(t *testing.T) {
 	repo := newMenuRepoStub()
 	svc := NewMenuService(repo)
