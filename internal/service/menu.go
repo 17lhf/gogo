@@ -20,11 +20,12 @@ var (
 // MenuService handles menu management business logic.
 type MenuService struct {
 	menuRepo repository.MenuRepository
+	userRepo repository.UserRepository
 }
 
 // NewMenuService creates a new MenuService.
-func NewMenuService(menuRepo repository.MenuRepository) *MenuService {
-	return &MenuService{menuRepo: menuRepo}
+func NewMenuService(menuRepo repository.MenuRepository, userRepo repository.UserRepository) *MenuService {
+	return &MenuService{menuRepo: menuRepo, userRepo: userRepo}
 }
 
 // Create creates a new menu item.
@@ -107,6 +108,19 @@ func (s *MenuService) TreeByRoleIDs(ctx context.Context, roleIDs []int64) ([]*mo
 	}
 
 	return buildTree(filtered, 0), nil
+}
+
+// TreeByUserID returns the menu tree for the given user, based on their roles.
+func (s *MenuService) TreeByUserID(ctx context.Context, userID int64) ([]*model.Menu, error) {
+	roles, err := s.userRepo.GetRoles(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	roleIDs := make([]int64, len(roles))
+	for i, role := range roles {
+		roleIDs[i] = role.ID
+	}
+	return s.TreeByRoleIDs(ctx, roleIDs)
 }
 
 // Update updates a menu.

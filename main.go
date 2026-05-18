@@ -104,14 +104,14 @@ func main() {
 
 	// Services
 	authSvc := service.NewAuthService(userRepo, roleRepo, sessionCache, lockoutCache, cfg.Auth)
+	menuSvc := service.NewMenuService(menuRepo, userRepo)
 	userSvc := service.NewUserService(userRepo, sessionCache)
 	roleSvc := service.NewRoleService(roleRepo, menuRepo, enforcer)
-	menuSvc := service.NewMenuService(menuRepo)
 	storeSvc := service.NewStoreService(storeRepo)
 	terminalSvc := service.NewTerminalService(terminalRepo, storeRepo, heartbeatCache, logRepo)
 
 	// Handlers
-	authHandler := handler.NewAuthHandler(authSvc)
+	authHandler := handler.NewAuthHandler(authSvc, menuSvc)
 	userHandler := handler.NewUserHandler(userSvc)
 	roleHandler := handler.NewRoleHandler(roleSvc)
 	menuHandler := handler.NewMenuHandler(menuSvc)

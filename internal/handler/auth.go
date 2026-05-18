@@ -16,11 +16,12 @@ import (
 // AuthHandler handles authentication-related HTTP requests.
 type AuthHandler struct {
 	authSvc *service.AuthService
+	menuSvc *service.MenuService
 }
 
 // NewAuthHandler creates a new AuthHandler.
-func NewAuthHandler(authSvc *service.AuthService) *AuthHandler {
-	return &AuthHandler{authSvc: authSvc}
+func NewAuthHandler(authSvc *service.AuthService, menuSvc *service.MenuService) *AuthHandler {
+	return &AuthHandler{authSvc: authSvc, menuSvc: menuSvc}
 }
 
 // Login handles POST /api/v1/auth/login.
@@ -54,11 +55,15 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 // Me handles GET /api/v1/auth/me.
 func (h *AuthHandler) Me(c *gin.Context) {
 	userID := middleware.GetUserID(c)
+
 	profile, err := h.authSvc.Me(c.Request.Context(), userID)
 	if err != nil {
 		pkg.Error(c, http.StatusInternalServerError, pkg.CodeInternalError, i18n.Localize(c, i18n.MsgAuthGetProfileFail))
 		return
 	}
+
+	profile.Menus, _ = h.menuSvc.TreeByUserID(c.Request.Context(), userID)
+
 	pkg.Success(c, profile)
 }
 

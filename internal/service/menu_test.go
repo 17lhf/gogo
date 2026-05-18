@@ -80,7 +80,7 @@ func (s *menuRepoStub) GetButtonAPIsByIDs(ctx context.Context, ids []int64) (map
 
 func TestMenuService_Tree(t *testing.T) {
 	repo := newMenuRepoStub()
-	svc := NewMenuService(repo)
+	svc := NewMenuService(repo, newUserRepoStub())
 
 	// Create root
 	root, _ := svc.Create(context.Background(), dto.CreateMenuReq{
@@ -112,7 +112,7 @@ func TestMenuService_Tree(t *testing.T) {
 
 func TestMenuService_DeleteWithChildren(t *testing.T) {
 	repo := newMenuRepoStub()
-	svc := NewMenuService(repo)
+	svc := NewMenuService(repo, newUserRepoStub())
 
 	root, _ := svc.Create(context.Background(), dto.CreateMenuReq{Name: "系统管理", Type: 1, SortOrder: 1})
 	svc.Create(context.Background(), dto.CreateMenuReq{ParentID: root.ID, Name: "用户管理", Type: 2, SortOrder: 1})
@@ -124,7 +124,7 @@ func TestMenuService_DeleteWithChildren(t *testing.T) {
 
 func TestMenuService_DeleteLeaf(t *testing.T) {
 	repo := newMenuRepoStub()
-	svc := NewMenuService(repo)
+	svc := NewMenuService(repo, newUserRepoStub())
 
 	leaf, _ := svc.Create(context.Background(), dto.CreateMenuReq{Name: "创建用户", Type: 3, Perms: "sys:user:add"})
 
