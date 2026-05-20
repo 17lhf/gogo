@@ -1,54 +1,54 @@
-# Dashboard Statistics API
+# Dashboard 统计 API 设计
 
-## Overview
+## 概述
 
-Add two read-only statistics endpoints under `/api/v1/stats/*` that return aggregated dashboard data for terminals and users.
+在 `/api/v1/stats/*` 下新增两个只读统计接口，返回终端和用户的聚合数据，用于首页看板展示。
 
-- `GET /api/v1/stats/terminals` — terminal status distribution, per-store breakdown, recent additions
-- `GET /api/v1/stats/users` — user status distribution, per-role breakdown, recent additions
+- `GET /api/v1/stats/terminals` — 终端状态分布、门店维度统计、近期新增
+- `GET /api/v1/stats/users` — 用户状态分布、角色维度统计、近期新增
 
-## Routes
+## 路由
 
 ```
 GET /api/v1/stats/terminals
 GET /api/v1/stats/users
 ```
 
-Both routes sit in the existing `protected` middleware group (Auth → PasswordExpiry → Permission → DataScope). No Audit middleware (read-only endpoints).
+两个路由挂载在已有的 `protected` 中间件组下（Auth → PasswordExpiry → Permission → DataScope）。不加 Audit 中间件（只读接口无需审计）。
 
-Terminal stats respect DataScope (store-level isolation for non-SUPER_ADMIN users). User stats are global — no store-level scoping applies.
+终端统计受 DataScope 约束（非 SUPER_ADMIN 仅能看到归属门店下的终端数据）。用户统计为全局视角，不做门店级隔离。
 
-## Architecture
+## 架构
 
-Follows the existing three-layer pattern:
+沿用现有三层模式：
 
 ```
 handler → service → repository → GORM
 ```
 
-### New files
+### 新增文件
 
-| File | Purpose |
-|------|---------|
-| `internal/repository/stats.go` | `StatsRepository` interface + GORM implementation |
-| `internal/service/stats.go` | `StatsService` — composes repo calls, accepts data-scope params |
-| `internal/handler/stats.go` | `StatsHandler` — two handler methods |
+| 文件 | 用途 |
+|------|------|
+| `internal/repository/stats.go` | `StatsRepository` 接口 + GORM 实现 |
+| `internal/service/stats.go` | `StatsService`，组合 repo 调用，接收数据权限参数 |
+| `internal/handler/stats.go` | `StatsHandler`，两个 handler 方法 |
 
-### Modified files
+### 修改文件
 
-| File | Change |
-|------|--------|
-| `internal/dto/response.go` | Add `TerminalStatsResp` and `UserStatsResp` DTOs |
-| `internal/router/router.go` | Register `/stats/terminals` and `/stats/users` routes; add `StatsHandler` to `Dependencies` |
-| `main.go` | Wire `StatsRepository` → `StatsService` → `StatsHandler` |
+| 文件 | 变更 |
+|------|------|
+| `internal/dto/response.go` | 新增 `TerminalStatsResp` 和 `UserStatsResp` 响应 DTO |
+| `internal/router/router.go` | 注册路由；`Dependencies` 新增 `StatsHandler` |
+| `main.go` | 依赖注入：`StatsRepository` → `StatsService` → `StatsHandler` |
 
-## Data Model
+## 数据结构
 
 ### Request
 
-No request body. No query params (for now).
+无请求体，无查询参数（当前版本）。
 
-### Response: `GET /api/v1/stats/terminals`
+### 响应：`GET /api/v1/stats/terminals`
 
 ```json
 {
@@ -77,9 +77,9 @@ No request body. No query params (for now).
 }
 ```
 
-`by_store` is scoped by DataScope: non-admin users only see stores they are assigned to. `status_distribution` and `recent_added` share the same scope.
+`by_store`、`status_distribution` 和 `recent_added` 均受 DataScope 约束：非管理员只看到归属门店下的数据。
 
-### Response: `GET /api/v1/stats/users`
+### 响应：`GET /api/v1/stats/users`
 
 ```json
 {
@@ -105,39 +105,39 @@ No request body. No query params (for now).
 }
 ```
 
-User stats are not store-scoped — role distribution and status distribution are global views.
+用户统计不做门店隔离，角色分布和状态分布为全局视图。
 
 ## Repository
 
-### StatsRepository interface
+### StatsRepository 接口
 
 ```go
 type StatsRepository interface {
-    // Terminal stats (storeIDs filters by data scope; empty = all)
+    // 终端统计（storeIDs 用于数据范围过滤，空切片 = 全量）
     TerminalStatusDistribution(ctx context.Context, storeIDs []int64) (map[string]int64, error)
     TerminalByStore(ctx context.Context, storeIDs []int64) ([]TerminalStoreStat, error)
     TerminalRecentAdded(ctx context.Context, storeIDs []int64) (last7Days int64, last30Days int64, err error)
 
-    // User stats (global, no data scope)
+    // 用户统计（全局，不做数据隔离）
     UserStatusDistribution(ctx context.Context) (map[int16]int64, error)
     UserByRole(ctx context.Context) ([]UserRoleStat, error)
     UserRecentAdded(ctx context.Context) (last7Days int64, last30Days int64, err error)
 }
 ```
 
-### Queries (GORM)
+### 查询说明 (GORM)
 
-- **TerminalStatusDistribution**: `SELECT status, COUNT(*) FROM terminals WHERE ... GROUP BY status`
-- **TerminalByStore**: `SELECT store_id, status, COUNT(*) FROM terminals JOIN stores ... WHERE ... GROUP BY store_id, status` — service layer pivots rows into `[]TerminalStoreStat`
-- **TerminalRecentAdded**: `SELECT COUNT(*) FROM terminals WHERE created_at >= ?`
-- **UserStatusDistribution**: `SELECT status, COUNT(*) FROM users GROUP BY status`
+- **TerminalStatusDistribution**: `SELECT status, COUNT(*) FROM terminals WHERE ... GROUP BY status`，返回 map
+- **TerminalByStore**: `SELECT store_id, status, COUNT(*) FROM terminals JOIN stores ... WHERE ... GROUP BY store_id, status` — service 层将行转为 `[]TerminalStoreStat`
+- **TerminalRecentAdded**: `SELECT COUNT(*) FROM terminals WHERE created_at >= ?`，分别统计 7 天和 30 天
+- **UserStatusDistribution**: `SELECT status, COUNT(*) FROM users GROUP BY status`，service 层将 int16 status 转为字符串 key
 - **UserByRole**: `SELECT role_id, COUNT(*) FROM user_roles JOIN roles ... GROUP BY role_id`
 - **UserRecentAdded**: `SELECT COUNT(*) FROM users WHERE created_at >= ?`
 
-## DTOs
+## DTO
 
 ```go
-// TerminalStatsResp is the top-level response for terminal stats.
+// TerminalStatsResp 终端统计响应
 type TerminalStatsResp struct {
     StatusDistribution map[string]int64        `json:"status_distribution"`
     ByStore            []TerminalStoreStatItem `json:"by_store"`
@@ -158,7 +158,7 @@ type RecentAddedStat struct {
     Last30Days int64 `json:"last_30_days"`
 }
 
-// UserStatsResp is the top-level response for user stats.
+// UserStatsResp 用户统计响应
 type UserStatsResp struct {
     StatusDistribution map[string]int64    `json:"status_distribution"`
     ByRole             []UserRoleStatItem `json:"by_role"`
@@ -172,29 +172,29 @@ type UserRoleStatItem struct {
 }
 ```
 
-## Permissions
+## 权限
 
-SUPER_ADMIN bypasses Casbin and always has access. For other roles, policies must be added via the existing role API (`PUT /api/v1/roles/:id/menus` or direct Casbin policy insertion) with the resource paths `/api/v1/stats/terminals` and `/api/v1/stats/users`.
+SUPER_ADMIN 绕过 Casbin，始终有访问权限。其他角色需要通过现有的角色管理 API 添加策略（资源路径为 `/api/v1/stats/terminals` 和 `/api/v1/stats/users`）。
 
-The seed/default setup does not auto-create Casbin policies for stats endpoints — this is consistent with how all other API permissions are managed.
+统计数据接口的 Casbin 策略不会在 seed 阶段自动创建，与其他 API 权限的管理方式保持一致。
 
-## Error Handling
+## 错误处理
 
-- Database errors return `50001` (internal server error)
-- Empty data (e.g., no terminals in a store) returns zero counts, not null / 404
-- Permission denied from Casbin returns `40301` (standard middleware behavior)
+- 数据库异常返回 `50001`（服务器内部错误）
+- 空数据（如某门店下无终端）返回零值计数，不返回 null 或 404
+- 无权限访问由 Permission 中间件统一返回 `40301`
 
-## Testing
+## 测试
 
-| Layer | What to test |
-|-------|-------------|
-| Repository | Mock GORM or use SQLite in-memory; verify aggregate queries return correct counts |
-| Service | Mock repository; verify data transformation (e.g., row pivoting for by_store) |
-| Handler | Mock service; verify HTTP 200, response structure, data-scope context reading |
+| 层级 | 测试内容 |
+|------|----------|
+| Repository | Mock GORM 或 SQLite 内存数据库；验证聚合查询返回正确的计数 |
+| Service | Mock repository；验证数据转换逻辑（如 by_store 行转列） |
+| Handler | Mock service；验证 HTTP 200、响应结构、DataScope 上下文读取 |
 
-## Scope considerations
+## 范围约束
 
-- Only two endpoints (terminals + users). Stores and logs stats are out of scope.
-- No time-range filtering (yet) — recent_added is always 7d/30d from now.
-- No caching in this iteration — queries hit the database directly.
-- DataScope for terminal stats reads store IDs from gin context (set by existing DataScope middleware).
+- 仅实现终端统计和用户统计两个接口，门店和日志统计不在当前范围
+- 暂不支持自定义时间范围过滤，recent_added 固定为当前时间的 7 天 / 30 天
+- 不引入缓存，每次请求直接查询数据库
+- 终端统计的 DataScope 从 gin context 读取 storeID 列表（由已有 DataScope 中间件注入）
