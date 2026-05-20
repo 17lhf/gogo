@@ -1,0 +1,42 @@
+### ============================================================
+### Logs — 日志查询接口
+### ============================================================
+
+@baseUrl = http://127.0.0.1:8080
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJ1c2VybmFtZSI6ImFkbWluIiwicm9sZXMiOlsiU1VQRVJfQURNSU4iXSwiZXhwIjoxNzc5Mjk2MTYzLCJpYXQiOjE3NzkyNjczNjMsImp0aSI6IjI1YzQzY2U2LTMyOWEtNDU5Zi05MDQzLWRjYTJjZjM1MGIyMiJ9.X4aEBgsy4f3FN1mcMhaSReMaUG_t7e4zB3g7H_OJTEg
+
+### 操作日志列表（分页）
+GET {{baseUrl}}/api/v1/logs/operations?page=1&page_size=10
+Authorization: Bearer {{token}}
+
+### 操作日志（按用户筛选）
+GET {{baseUrl}}/api/v1/logs/operations?page=1&page_size=10&user_id=1
+Authorization: Bearer {{token}}
+
+### 操作日志（按操作类型筛选）
+GET {{baseUrl}}/api/v1/logs/operations?page=1&page_size=10&action=login
+Authorization: Bearer {{token}}
+
+### 操作日志（按状态筛选: 1=成功 2=失败）
+GET {{baseUrl}}/api/v1/logs/operations?page=1&page_size=10&status=1
+Authorization: Bearer {{token}}
+
+### 操作日志（按时间范围筛选）
+GET {{baseUrl}}/api/v1/logs/operations?page=1&page_size=10&start_time=2026-01-01T00:00:00Z&end_time=2026-12-31T23:59:59Z
+Authorization: Bearer {{token}}
+
+### 终端日志列表（分页）
+GET {{baseUrl}}/api/v1/logs/terminals?page=1&page_size=10
+Authorization: Bearer {{token}}
+
+### 终端日志（按SN筛选）
+GET {{baseUrl}}/api/v1/logs/terminals?page=1&page_size=10&sn=TERM-001
+Authorization: Bearer {{token}}
+
+### 终端日志（按事件类型筛选）
+GET {{baseUrl}}/api/v1/logs/terminals?page=1&page_size=10&event_type=heartbeat
+Authorization: Bearer {{token}}
+
+### 终端日志（按时间范围筛选）
+GET {{baseUrl}}/api/v1/logs/terminals?page=1&page_size=10&start_time=2026-01-01T00:00:00Z&end_time=2026-12-31T23:59:59Z
+Authorization: Bearer {{token}}

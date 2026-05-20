@@ -1,0 +1,61 @@
+### ============================================================
+### Menus — 菜单管理接口
+### ============================================================
+
+@baseUrl = http://127.0.0.1:8080
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJ1c2VybmFtZSI6ImFkbWluIiwicm9sZXMiOlsiU1VQRVJfQURNSU4iXSwiZXhwIjoxNzc5Mjk2MTYzLCJpYXQiOjE3NzkyNjczNjMsImp0aSI6IjI1YzQzY2U2LTMyOWEtNDU5Zi05MDQzLWRjYTJjZjM1MGIyMiJ9.X4aEBgsy4f3FN1mcMhaSReMaUG_t7e4zB3g7H_OJTEg
+
+### 菜单树
+GET {{baseUrl}}/api/v1/menus
+Authorization: Bearer {{token}}
+
+### 获取菜单详情
+GET {{baseUrl}}/api/v1/menus/1
+Authorization: Bearer {{token}}
+
+### 创建目录菜单（type: 1=目录 2=菜单 3=按钮）
+POST {{baseUrl}}/api/v1/menus
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "parent_id": 0,
+  "name": "系统管理",
+  "path": "/system",
+  "component": "Layout",
+  "icon": "setting",
+  "type": 1,
+  "sort_order": 1
+}
+
+### 创建页面菜单
+POST {{baseUrl}}/api/v1/menus
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "parent_id": 1,
+  "name": "用户管理",
+  "path": "/system/users",
+  "component": "system/users/index",
+  "icon": "user",
+  "type": 2,
+  "perms": "user:list",
+  "api_path": "/api/v1/users",
+  "api_method": "GET",
+  "sort_order": 1
+}
+
+### 更新菜单
+PUT {{baseUrl}}/api/v1/menus/2
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "用户管理2",
+  "sort_order": 2
+}
+
+### 删除菜单
+DELETE {{baseUrl}}/api/v1/menus/34
+Authorization: Bearer {{token}}

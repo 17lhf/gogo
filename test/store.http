@@ -1,0 +1,43 @@
+### ============================================================
+### Stores — 门店管理接口
+### ============================================================
+
+@baseUrl = http://127.0.0.1:8080
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJ1c2VybmFtZSI6ImFkbWluIiwicm9sZXMiOlsiU1VQRVJfQURNSU4iXSwiZXhwIjoxNzc5Mjk2MTYzLCJpYXQiOjE3NzkyNjczNjMsImp0aSI6IjI1YzQzY2U2LTMyOWEtNDU5Zi05MDQzLWRjYTJjZjM1MGIyMiJ9.X4aEBgsy4f3FN1mcMhaSReMaUG_t7e4zB3g7H_OJTEg
+
+### 门店列表（分页 + 筛选）
+GET {{baseUrl}}/api/v1/stores?page=1&page_size=10
+Authorization: Bearer {{token}}
+
+### 门店列表（按名称筛选）
+GET {{baseUrl}}/api/v1/stores?page=1&page_size=10&name=旗舰店
+Authorization: Bearer {{token}}
+
+### 获取门店详情
+GET {{baseUrl}}/api/v1/stores/1
+Authorization: Bearer {{token}}
+
+### 创建门店
+POST {{baseUrl}}/api/v1/stores
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "朝阳旗舰店",
+  "code": "store_001",
+  "address": "北京市朝阳区建国路88号"
+}
+
+### 更新门店
+PUT {{baseUrl}}/api/v1/stores/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "朝阳旗舰店(装修升级)",
+  "address": "北京市朝阳区建国路99号"
+}
+
+### 删除门店
+DELETE {{baseUrl}}/api/v1/stores/2
+Authorization: Bearer {{token}}

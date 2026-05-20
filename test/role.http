@@ -1,0 +1,52 @@
+### ============================================================
+### Roles — 角色管理接口
+### ============================================================
+
+@baseUrl = http://127.0.0.1:8080
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJ1c2VybmFtZSI6ImFkbWluIiwicm9sZXMiOlsiU1VQRVJfQURNSU4iXSwiZXhwIjoxNzc5Mjk2MTYzLCJpYXQiOjE3NzkyNjczNjMsImp0aSI6IjI1YzQzY2U2LTMyOWEtNDU5Zi05MDQzLWRjYTJjZjM1MGIyMiJ9.X4aEBgsy4f3FN1mcMhaSReMaUG_t7e4zB3g7H_OJTEg
+
+### 角色列表
+GET {{baseUrl}}/api/v1/roles
+Authorization: Bearer {{token}}
+
+### 获取角色详情
+GET {{baseUrl}}/api/v1/roles/1
+Authorization: Bearer {{token}}
+
+### 创建角色
+POST {{baseUrl}}/api/v1/roles
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "运营经理",
+  "code": "ops_manager",
+  "description": "负责门店日常运营管理"
+}
+
+### 更新角色
+PUT {{baseUrl}}/api/v1/roles/2
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "高级运营经理",
+  "description": "负责多门店运营管理"
+}
+
+### 删除角色
+DELETE {{baseUrl}}/api/v1/roles/2
+Authorization: Bearer {{token}}
+
+### 获取角色的菜单权限
+GET {{baseUrl}}/api/v1/roles/1/menus
+Authorization: Bearer {{token}}
+
+### 给角色分配菜单
+PUT {{baseUrl}}/api/v1/roles/1/menus
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "menu_ids": [1, 2, 3]
+}

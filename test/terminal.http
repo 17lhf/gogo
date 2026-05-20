@@ -1,0 +1,74 @@
+### ============================================================
+### Terminals — 终端管理接口
+### ============================================================
+
+@baseUrl = http://127.0.0.1:8080
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJ1c2VybmFtZSI6ImFkbWluIiwicm9sZXMiOlsiU1VQRVJfQURNSU4iXSwiZXhwIjoxNzc5Mjk2MTYzLCJpYXQiOjE3NzkyNjczNjMsImp0aSI6IjI1YzQzY2U2LTMyOWEtNDU5Zi05MDQzLWRjYTJjZjM1MGIyMiJ9.X4aEBgsy4f3FN1mcMhaSReMaUG_t7e4zB3g7H_OJTEg
+@deviceToken =
+
+### 终端列表（分页 + 筛选）
+GET {{baseUrl}}/api/v1/terminals?page=1&page_size=10
+Authorization: Bearer {{token}}
+
+### 终端列表（按SN筛选）
+GET {{baseUrl}}/api/v1/terminals?page=1&page_size=10&sn=TERM-001
+Authorization: Bearer {{token}}
+
+### 终端列表（按状态筛选: offline / online / disabled）
+GET {{baseUrl}}/api/v1/terminals?page=1&page_size=10&status=offline
+Authorization: Bearer {{token}}
+
+### 终端列表（按门店筛选）
+GET {{baseUrl}}/api/v1/terminals?page=1&page_size=10&store_id=1
+Authorization: Bearer {{token}}
+
+### 获取终端详情
+GET {{baseUrl}}/api/v1/terminals/1
+Authorization: Bearer {{token}}
+
+### 创建终端
+POST {{baseUrl}}/api/v1/terminals
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "sn": "TERM-001",
+  "name": "收银终端A1",
+  "type": "pos",
+  "store_id": 1
+}
+
+### 更新终端
+PUT {{baseUrl}}/api/v1/terminals/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "收银终端A1-升级版",
+  "type": "pos_v2",
+  "store_id": 1,
+  "status": "offline"
+}
+
+### 删除终端
+DELETE {{baseUrl}}/api/v1/terminals/2
+Authorization: Bearer {{token}}
+
+### ============================================================
+### 终端设备接口（独立认证，使用 X-Device-Token）
+### ============================================================
+
+### 终端心跳上报
+POST {{baseUrl}}/api/v1/terminals/TERM-001/heartbeat
+X-Device-Token: {{deviceToken}}
+Content-Type: application/json
+
+{
+  "ip_address": "192.168.1.100",
+  "mac_address": "AA:BB:CC:DD:EE:FF"
+}
+
+### 终端轮换设备令牌
+# 成功后将返回的 device_token 填到上方 @deviceToken 变量中
+POST {{baseUrl}}/api/v1/terminals/TERM-001/rotate-token
+X-Device-Token: {{deviceToken}}

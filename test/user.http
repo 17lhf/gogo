@@ -1,0 +1,78 @@
+### ============================================================
+### Users — 用户管理接口
+### ============================================================
+
+@baseUrl = http://127.0.0.1:8080
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJ1c2VybmFtZSI6ImFkbWluIiwicm9sZXMiOlsiU1VQRVJfQURNSU4iXSwiZXhwIjoxNzc5Mjk2MTYzLCJpYXQiOjE3NzkyNjczNjMsImp0aSI6IjI1YzQzY2U2LTMyOWEtNDU5Zi05MDQzLWRjYTJjZjM1MGIyMiJ9.X4aEBgsy4f3FN1mcMhaSReMaUG_t7e4zB3g7H_OJTEg
+
+### 用户列表（分页 + 筛选）
+GET {{baseUrl}}/api/v1/users?page=1&page_size=10
+Authorization: Bearer {{token}}
+
+### 用户列表（按用户名筛选）
+GET {{baseUrl}}/api/v1/users?page=1&page_size=10&username=admin
+Authorization: Bearer {{token}}
+
+### 用户列表（按状态筛选 enabled=1, disabled=0）
+GET {{baseUrl}}/api/v1/users?page=1&page_size=10&status=1
+Authorization: Bearer {{token}}
+
+### 获取用户详情
+GET {{baseUrl}}/api/v1/users/1
+Authorization: Bearer {{token}}
+
+### 创建用户
+POST {{baseUrl}}/api/v1/users
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "username": "testuser",
+  "email": "test@example.com",
+  "password": "Test1234",
+  "real_name": "测试用户",
+  "phone": "13800138000"
+}
+
+### 更新用户
+PUT {{baseUrl}}/api/v1/users/2
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "email": "updated@example.com",
+  "real_name": "新名字",
+  "phone": "13900139000",
+  "status": 1
+}
+
+### 删除用户
+DELETE {{baseUrl}}/api/v1/users/2
+Authorization: Bearer {{token}}
+
+### 重置用户密码（管理员）
+PUT {{baseUrl}}/api/v1/users/2/password
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "password": "NewPass456"
+}
+
+### 分配角色给用户
+PUT {{baseUrl}}/api/v1/users/2/roles
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "role_ids": [1, 2]
+}
+
+### 分配门店给用户
+PUT {{baseUrl}}/api/v1/users/2/stores
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "store_ids": [1, 2]
+}
