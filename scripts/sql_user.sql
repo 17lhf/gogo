@@ -23,3 +23,27 @@ GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO gogo;
 -- 这样以后你在 gogo_dev 库里新建表时，gogo 用户自动拥有权限，不用每次都重新授权
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO gogo;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO gogo;
+
+-- 将 public 模式的所有权转让给 app_user
+ALTER SCHEMA public OWNER TO app_user;
+
+-- 一次性把 public schema 下所有表的所有权转给 gogo
+DO $$
+  DECLARE
+      r RECORD;
+  BEGIN
+      FOR r IN SELECT tablename FROM pg_tables WHERE schemaname = 'public'
+      LOOP
+          EXECUTE 'ALTER TABLE ' || quote_ident(r.tablename) || ' OWNER TO gogo';
+      END LOOP;
+  END $$;
+
+  DO $$
+  DECLARE
+      r RECORD;
+  BEGIN
+      FOR r IN SELECT sequencename FROM pg_sequences WHERE schemaname = 'public'
+      LOOP
+          EXECUTE 'ALTER SEQUENCE ' || quote_ident(r.sequencename) || ' OWNER TO gogo';
+      END LOOP;
+  END $$;
