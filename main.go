@@ -20,6 +20,8 @@ import (
 	"gogo/internal/repository"
 	"gogo/internal/router"
 	"gogo/internal/service"
+
+	"gorm.io/gorm/logger"
 )
 
 func main() {
@@ -68,7 +70,11 @@ func main() {
 	slog.Info("postgres connected")
 
 	// GORM
-	gormDB, err := db.NewGORM(ctx, cfg.Postgres.DSN())
+	gormLogLevel := logger.Warn
+	if level == slog.LevelDebug {
+		gormLogLevel = logger.Info
+	}
+	gormDB, err := db.NewGORM(ctx, cfg.Postgres.DSN(), gormLogLevel)
 	if err != nil {
 		log.Fatalf("gorm init: %v", err)
 	}

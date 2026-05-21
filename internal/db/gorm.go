@@ -10,12 +10,13 @@ import (
 )
 
 // NewGORM creates a GORM DB instance from a PostgreSQL DSN.
-func NewGORM(ctx context.Context, dsn string) (*gorm.DB, error) {
+// Set logLevel to logger.Info in dev to print all SQL statements.
+func NewGORM(ctx context.Context, dsn string, logLevel logger.LogLevel) (*gorm.DB, error) {
 	db, err := gorm.Open(postgres.New(postgres.Config{
 		DriverName: "pgx",
 		DSN:        dsn,
 	}), &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Warn),
+		Logger: logger.Default.LogMode(logLevel),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("gorm open: %w", err)
