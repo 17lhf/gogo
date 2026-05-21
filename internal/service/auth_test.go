@@ -81,6 +81,15 @@ func (s *userRepoStub) UpdateLastLogin(ctx context.Context, id int64) error { re
 func (s *userRepoStub) UpdateStatus(ctx context.Context, id int64, status model.UserStatus) error {
 	return nil
 }
+func (s *userRepoStub) GetCountByStatus(ctx context.Context) (map[int16]int64, error) {
+	return nil, nil
+}
+func (s *userRepoStub) GetCountByRole(ctx context.Context) ([]dto.UserRoleStatItem, error) {
+	return nil, nil
+}
+func (s *userRepoStub) GetCountByRecentAdded(ctx context.Context) (*dto.StatsRecentAdded, error) {
+	return nil, nil
+}
 
 func (s *userRepoStub) GetRoles(ctx context.Context, userID int64) ([]model.Role, error) {
 	return s.roles[userID], nil

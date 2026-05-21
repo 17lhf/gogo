@@ -143,6 +143,7 @@ func Register(r *gin.Engine, d *Dependencies) {
 	protectedStats := protected.Group("")
 	{
 		protectedStats.GET("/stats/terminals", d.StatsHandler.GetTerminals)
+		protectedStats.GET("/stats/users", d.StatsHandler.GetUsers)
 	}
 
 	// 404 handler

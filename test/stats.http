@@ -9,3 +9,7 @@
 ### 获取终端统计数据
 GET {{baseUrl}}/api/v1/stats/terminals
 Authorization: Bearer {{token}}
+
+### 获取用户统计数据
+GET {{baseUrl}}/api/v1/stats/users
+Authorization: Bearer {{token}}

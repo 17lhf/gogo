@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"log/slog"
 	"time"
 
 	"gogo/internal/dto"
@@ -29,6 +30,10 @@ type UserRepository interface {
 	UpdatePassword(ctx context.Context, id int64, hash string, mustChange bool) error
 	UpdateLastLogin(ctx context.Context, id int64) error
 	UpdateStatus(ctx context.Context, id int64, status model.UserStatus) error
+
+	GetCountByStatus(ctx context.Context) (map[int16]int64, error)
+	GetCountByRole(ctx context.Context) ([]dto.UserRoleStatItem, error)
+	GetCountByRecentAdded(ctx context.Context) (*dto.StatsRecentAdded, error)
 }
 
 type userRepository struct {
@@ -176,4 +181,52 @@ func (r *userRepository) UpdateLastLogin(ctx context.Context, id int64) error {
 
 func (r *userRepository) UpdateStatus(ctx context.Context, id int64, status model.UserStatus) error {
 	return r.db.WithContext(ctx).Model(&model.User{}).Where("id = ?", id).Update("status", status).Error
+}
+
+func (r *userRepository) GetCountByStatus(ctx context.Context) (map[int16]int64, error) {
+	type statusRow struct {
+		Status int16 `gorm:"column:status"`
+		Count  int64 `gorm:"column:count"`
+	}
+	var rows []statusRow
+	err := r.db.WithContext(ctx).Raw(
+		"SELECT status, COUNT(*) as count FROM users GROUP BY status",
+	).Scan(&rows).Error
+	if err != nil {
+		slog.Error("failed to get user count by status", "error", err)
+		return nil, err
+	}
+	result := make(map[int16]int64, len(rows))
+	for _, row := range rows {
+		result[row.Status] = row.Count
+	}
+	return result, nil
+}
+
+func (r *userRepository) GetCountByRole(ctx context.Context) ([]dto.UserRoleStatItem, error) {
+	var stats []dto.UserRoleStatItem
+	err := r.db.WithContext(ctx).Raw(
+		`SELECT r.id as role_id, r.name as role_name, COUNT(ur.user_id) as count
+		FROM roles r
+		LEFT JOIN user_roles ur ON ur.role_id = r.id
+		GROUP BY r.id, r.name
+		ORDER BY r.id`,
+	).Scan(&stats).Error
+	if err != nil {
+		slog.Error("failed to get user count by role", "error", err)
+	}
+	return stats, err
+}
+
+func (r *userRepository) GetCountByRecentAdded(ctx context.Context) (*dto.StatsRecentAdded, error) {
+	var stats dto.StatsRecentAdded
+	err := r.db.WithContext(ctx).Raw(
+		`SELECT count(*) filter (where created_at >= now() - interval '7 days') as last7_days,
+			count(*) filter (where created_at >= now() - interval '30 days') as last30_days
+		FROM users`,
+	).Scan(&stats).Error
+	if err != nil {
+		slog.Error("failed to get user count by recent added", "error", err)
+	}
+	return &stats, err
 }

@@ -109,7 +109,7 @@ func main() {
 	roleSvc := service.NewRoleService(roleRepo, menuRepo, enforcer)
 	storeSvc := service.NewStoreService(storeRepo)
 	terminalSvc := service.NewTerminalService(terminalRepo, storeRepo, heartbeatCache, logRepo)
-	statsSvc := service.NewStatsService(terminalRepo)
+	statsSvc := service.NewStatsService(terminalRepo, userRepo)
 
 	// Handlers
 	authHandler := handler.NewAuthHandler(authSvc, menuSvc)

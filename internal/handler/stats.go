@@ -26,3 +26,13 @@ func (h *StatsHandler) GetTerminals(c *gin.Context) {
 	}
 	pkg.Success(c, statsTerminals)
 }
+
+// GetUsers handles GET /api/v1/stats/users
+func (h *StatsHandler) GetUsers(c *gin.Context) {
+	statsUsers, err := h.statsSvc.GetUsers(c.Request.Context())
+	if err != nil {
+		pkg.Error(c, http.StatusInternalServerError, pkg.CodeInternalError, i18n.Localize(c, i18n.MsgGetUsersStatsFailed)+err.Error())
+		return
+	}
+	pkg.Success(c, statsUsers)
+}

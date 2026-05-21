@@ -52,3 +52,15 @@ type StatsTerminalsResp struct {
 	ByStore            []StatsByStore          `json:"by_store"`
 	RecentAdded        StatsRecentAdded        `json:"recent_added"`
 }
+
+type UserRoleStatItem struct {
+	RoleID   int64  `json:"role_id"`
+	RoleName string `json:"role_name"`
+	Count    int64  `json:"count"`
+}
+
+type UserStatsResp struct {
+	StatusDistribution map[string]int64   `json:"status_distribution"`
+	ByRole             []UserRoleStatItem `json:"by_role"`
+	RecentAdded        StatsRecentAdded   `json:"recent_added"`
+}

@@ -142,3 +142,6 @@ other = "查询终端日志失败"
 
 [error.stats.get_terminals_failed]
 other = "获取终端统计信息失败"
+
+[error.stats.get_users_failed]
+other = "获取用户统计信息失败"

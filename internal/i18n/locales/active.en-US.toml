@@ -142,3 +142,6 @@ other = "Failed to query terminal logs"
 
 [error.stats.get_terminals_failed]
 other = "Failed to get terminal stats"
+
+[error.stats.get_users_failed]
+other = "Failed to get user stats"

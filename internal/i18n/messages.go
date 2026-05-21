@@ -97,4 +97,5 @@ const (
 
 const (
 	MsgGetTerminalsStatsFailed = "error.stats.get_terminals_failed"
+	MsgGetUsersStatsFailed     = "error.stats.get_users_failed"
 )
