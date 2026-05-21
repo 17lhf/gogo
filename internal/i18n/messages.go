@@ -35,10 +35,10 @@ const (
 
 // User errors
 const (
-	MsgUserNotFound      = "error.user.not_found"
-	MsgUsernameExists    = "error.user.username_exists"
-	MsgEmailExists       = "error.user.email_exists"
-	MsgUserListFailed    = "error.user.list_failed"
+	MsgUserNotFound   = "error.user.not_found"
+	MsgUsernameExists = "error.user.username_exists"
+	MsgEmailExists    = "error.user.email_exists"
+	MsgUserListFailed = "error.user.list_failed"
 )
 
 // Role errors
@@ -93,4 +93,8 @@ const (
 const (
 	MsgLogOperationsFailed = "error.log.operations_failed"
 	MsgLogTerminalsFailed  = "error.log.terminals_failed"
+)
+
+const (
+	MsgGetTerminalsStatsFailed = "error.stats.get_terminals_failed"
 )

@@ -3,7 +3,7 @@
 ### ============================================================
 
 @baseUrl = http://127.0.0.1:8080
-@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJ1c2VybmFtZSI6ImFkbWluIiwicm9sZXMiOlsiU1VQRVJfQURNSU4iXSwiZXhwIjoxNzc5Mjk2MTYzLCJpYXQiOjE3NzkyNjczNjMsImp0aSI6IjI1YzQzY2U2LTMyOWEtNDU5Zi05MDQzLWRjYTJjZjM1MGIyMiJ9.X4aEBgsy4f3FN1mcMhaSReMaUG_t7e4zB3g7H_OJTEg
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJ1c2VybmFtZSI6ImFkbWluIiwicm9sZXMiOlsiU1VQRVJfQURNSU4iXSwiZXhwIjoxNzc5Mzc4MDU5LCJpYXQiOjE3NzkzNDkyNTksImp0aSI6ImFhNTU4MzJiLTdiM2MtNDkwNS1hYTZjLTYxNDM3NmM3ZGZmYiJ9.XKA2vI5S2JrXvqmY-KNCw6cWeaf04cffn4OzaCc0yWE
 
 ### 登录
 # 成功后请将 access_token 填到上方 @token 变量中

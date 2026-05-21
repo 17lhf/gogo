@@ -22,6 +22,7 @@ type Dependencies struct {
 	StoreHandler    *handler.StoreHandler
 	TerminalHandler *handler.TerminalHandler
 	LogHandler      *handler.LogHandler
+	StatsHandler    *handler.StatsHandler
 
 	SessionCache   *cache.SessionCache
 	HeartbeatCache *cache.HeartbeatCache
@@ -136,6 +137,12 @@ func Register(r *gin.Engine, d *Dependencies) {
 	{
 		protectedLogs.GET("/logs/operations", d.LogHandler.ListOperations)
 		protectedLogs.GET("/logs/terminals", d.LogHandler.ListTerminals)
+	}
+
+	// Stats routes
+	protectedStats := protected.Group("")
+	{
+		protectedStats.GET("/stats/terminals", d.StatsHandler.GetTerminals)
 	}
 
 	// 404 handler

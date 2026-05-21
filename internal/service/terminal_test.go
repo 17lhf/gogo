@@ -100,6 +100,18 @@ func (s *terminalRepoStub) UpdateStatusBySN(ctx context.Context, sn string, stat
 	return nil
 }
 
+func (s *terminalRepoStub) GetCountByStatus(ctx context.Context) (*dto.StatsStatusDistribution, error) {
+	return &dto.StatsStatusDistribution{}, nil
+}
+
+func (s *terminalRepoStub) GetCountByStore(ctx context.Context) ([]dto.StatsByStore, error) {
+	return nil, nil
+}
+
+func (s *terminalRepoStub) GetCountByRecentAdded(ctx context.Context) (*dto.StatsRecentAdded, error) {
+	return &dto.StatsRecentAdded{}, nil
+}
+
 func (s *terminalRepoStub) UpdateDeviceToken(ctx context.Context, id int64, token string) error {
 	t := s.terminals[id]
 	if t != nil {

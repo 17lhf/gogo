@@ -1,0 +1,11 @@
+### ============================================================
+### Auth — 认证接口
+### ============================================================
+
+@baseUrl = http://127.0.0.1:8080
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJ1c2VybmFtZSI6ImFkbWluIiwicm9sZXMiOlsiU1VQRVJfQURNSU4iXSwiZXhwIjoxNzc5Mzc4MDU5LCJpYXQiOjE3NzkzNDkyNTksImp0aSI6ImFhNTU4MzJiLTdiM2MtNDkwNS1hYTZjLTYxNDM3NmM3ZGZmYiJ9.XKA2vI5S2JrXvqmY-KNCw6cWeaf04cffn4OzaCc0yWE
+
+
+### 获取终端统计数据
+GET {{baseUrl}}/api/v1/stats/terminals
+Authorization: Bearer {{token}}

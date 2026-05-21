@@ -223,7 +223,8 @@ CROSS JOIN (VALUES
     ('菜单管理', '/system/menu',    'system/menu/index',     'menu',     3),
     ('门店管理', '/system/store',   'system/store/index',    'store',    4),
     ('终端管理', '/system/terminal','system/terminal/index', 'terminal', 5),
-    ('日志管理', '/system/log',     'system/log/index',      'log',      6)
+    ('日志管理', '/system/log',     'system/log/index',      'log',      6),
+    ('系统监控', '/system/monitor', 'system/monitor/index', 'monitor',  7)
 ) AS p(name, path, component, icon, sort_order)
 WHERE NOT EXISTS (
     SELECT 1 FROM menus c
@@ -260,7 +261,8 @@ FROM (VALUES
     ('终端管理', '删除终端',   'sys:terminal:delete',   '/api/v1/terminals/:id',      'DELETE', 3),
     ('终端管理', '终端列表',   'sys:terminal:list',     '/api/v1/terminals',          'GET',    4),
     ('日志管理', '操作日志列表', 'sys:log:list',         '/api/v1/logs/operations',    'GET',    1),
-    ('日志管理', '终端日志列表', 'sys:log:list',         '/api/v1/logs/terminals',     'GET',    2)
+    ('日志管理', '终端日志列表', 'sys:log:list',         '/api/v1/logs/terminals',     'GET',    2),
+    ('系统监控', '终端统计',   'sys:monitor:terminal-stats',      '/api/v1/stats/terminals',            'GET',    1)
 ) AS b(page_name, name, perms, api_path, api_method, sort_order)
 JOIN menus pg ON pg.name = b.page_name AND pg.type = 2
     AND pg.parent_id = (SELECT id FROM menus WHERE name = '系统管理' AND parent_id = 0 AND type = 1)
@@ -306,7 +308,8 @@ FROM (VALUES
     ('/api/v1/terminals/:id',      'DELETE'),
     ('/api/v1/terminals',          'GET'),
     ('/api/v1/logs/operations',    'GET'),
-    ('/api/v1/logs/terminals',     'GET')
+    ('/api/v1/logs/terminals',     'GET'),
+    ('/api/v1/stats/terminals',    'GET')
 ) AS p(path, method)
 WHERE NOT EXISTS (
     SELECT 1 FROM casbin_rule cr

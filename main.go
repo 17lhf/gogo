@@ -109,6 +109,7 @@ func main() {
 	roleSvc := service.NewRoleService(roleRepo, menuRepo, enforcer)
 	storeSvc := service.NewStoreService(storeRepo)
 	terminalSvc := service.NewTerminalService(terminalRepo, storeRepo, heartbeatCache, logRepo)
+	statsSvc := service.NewStatsService(terminalRepo)
 
 	// Handlers
 	authHandler := handler.NewAuthHandler(authSvc, menuSvc)
@@ -118,7 +119,7 @@ func main() {
 	storeHandler := handler.NewStoreHandler(storeSvc)
 	terminalHandler := handler.NewTerminalHandler(terminalSvc, heartbeatCache)
 	logHandler := handler.NewLogHandler(logRepo)
-
+	statsHandler := handler.NewStatsHandler(statsSvc)
 	// Start heartbeat expiry listener
 	go cache.ListenForExpiry(context.Background(), rdb, func(sn string) {
 		slog.Info("heartbeat expired", "sn", sn)
@@ -141,13 +142,13 @@ func main() {
 		StoreHandler:    storeHandler,
 		TerminalHandler: terminalHandler,
 		LogHandler:      logHandler,
-
-		SessionCache:   sessionCache,
-		HeartbeatCache: heartbeatCache,
-		UserRepo:       userRepo,
-		LogRepo:        logRepo,
-		Enforcer:       enforcer,
-		AuthConfig:     cfg.Auth,
+		StatsHandler:    statsHandler,
+		SessionCache:    sessionCache,
+		HeartbeatCache:  heartbeatCache,
+		UserRepo:        userRepo,
+		LogRepo:         logRepo,
+		Enforcer:        enforcer,
+		AuthConfig:      cfg.Auth,
 	})
 
 	slog.Info("HTTP server starting", "port", cfg.Server.Port)
